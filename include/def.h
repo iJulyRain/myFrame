@@ -157,8 +157,11 @@ typedef struct object_buf
 	char *buffer;
 	int read_pos, write_pos;
 
-	int (*read_cb)(object_t parent);	///<读时回调
-	int (*send_cb)(object_t parent);	///<写时回调
+	char *output;
+
+	char *head, *tail;
+	size_t head_size, tail_size;
+	size_t length;
 }*object_buf_t;
 
 /**
@@ -167,24 +170,21 @@ typedef struct object_buf
 typedef struct object_io
 {
 	struct object parent;	///<基类
+	HMOD hmod;
 
 	int fd;
 	int connect;
-	void *cfg;
+	void *settings;
 
 	object_buf_t read_buf, send_buf;
 
 	void (*_info)	(void);							///<接口信息
-	int  (*_init)	(object_t parent, void *info, object_buf_t, object_buf_t);	///<初始化
+	int  (*_init)	(object_t parent, void *settings, object_buf_t, object_buf_t);	///<初始化
 	int  (*_connect)(object_t parent);				///<连接
 	int  (*_state)	(object_t parent);				///<检查连接
 	void (*_close)	(object_t parent);				///<关闭
-	int  (*_poll)	(object_t parent, int timeout);	///<POLL
-	int  (*_recv)	(object_t parent, char *buffer, int size);	///<读
-	int  (*_send)	(object_t parent, const char *buffer, const int size);	///<写
-
-	int (*_readbuf)	(object_t parent, char *buffer, int size);	///<读缓冲
-	int (*_sendbuf)	(object_t parent, const char *buffer, const int size);	///<写缓冲
+	int  (*_recv)	(object_t parent);	///<读
+	int  (*_send)	(object_t parent);	///<写
 
 	void *user_data;
 }*object_io_t;

@@ -17,6 +17,42 @@
  */
 #include "common.h"
 
+object_buf_t buffer_new(void)
+{
+
+}
+
+int buffer_add(object_buf_t buf, const char *buffer, size_t size)
+{
+	return 0;
+}
+
+int buffer_pop(object_buf_t buf, char *buffer, size_t size)
+{
+	return 0;
+}
+
+int buffer_readline(object_buf_t buf, char *buffer, size_t size)
+{
+
+}
+
+char *buffer_find(object_buf_t buf, const char *what, size_t size)
+{
+
+}
+
+int buffer_pending(object_buf_t buf, char *buffer, size_t size)
+{
+
+}
+
+int buffer_setmode(object_buf_t buf, const char *head, size_t head_size, const char *tail, size_t tail_size, size_t length)
+{
+
+}
+
+#if 0 
 int buffer_readbuf(object_t parent, char *buffer, int size)
 {
 	int i, rxnum;
@@ -153,3 +189,5 @@ int buffer_get_buffer(object_buf_t buf, char *buffer, int size)
 
 	return i;
 }
+
+#endif
