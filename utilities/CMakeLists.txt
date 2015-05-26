@@ -1,0 +1,6 @@
+add_subdirectory(common)
+add_subdirectory(sqlite3)
+add_subdirectory(modbus)
+add_subdirectory(zlog)
+add_subdirectory(lua)
+add_subdirectory(mxml)
