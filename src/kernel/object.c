@@ -37,41 +37,6 @@ void object_container_init(void)
 }
 
 /**
-* @brief 对象迭代器
-*
-* 这个函数不是安全的，当有其他线程操作对量链表时
-* 有可能造成不可预知的后果
-*
-* @param type 对象类型，索引对象容器
-* @param po 当前对象位置
-*
-* @return 遍历完返回NULL，否则返回下一个对象指针 
-*/
-object_t object_iter(int type, object_t po)
-{
-	list_t *node;
-	object_t p;
-	struct object_information *information;
-
-	if(type < 0 || type > object_class_type_unknown)
-		return NULL;
-
-	information = &object_container[type];
-	
-	if(po == NULL)
-		node = information->list.next;
-	else
-		node = po->list.next;
-
-	if(node == &information->list)
-		return NULL;
-
-	p = list_entry(node, struct object, list);
-
-	return p;
-}
-
-/**
 * @brief 查找对象
 *
 * @param name 对象名称

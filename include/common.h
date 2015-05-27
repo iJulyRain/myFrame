@@ -55,14 +55,7 @@
 #include "version.h"
 #include "who.h"
 
-#include "io.h"
-
-#include "sem.h"
 #include "tools.h"
-#include "ipc.h"
-#include "serial_port.h"
-
-#include <sqlite3.h>
 
 struct uart_setting
 {

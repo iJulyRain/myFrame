@@ -29,6 +29,29 @@
 
 #define TICK_PER_SECOND 10
 
+/**
+* @brief 定时器回调函数类型
+*
+* @param 参数 
+*
+* @return NULL 
+*/
+typedef void (*timer_func_t)(void *parameter);
+
+/**
+* @brief 定时器类
+*/
+typedef struct object_timer
+{
+	struct object parent;	///<基类
+
+	HMOD hmod;	///<定时器归属
+	int id;		///<定时器编号
+	int timeout_tick;	///<当前定时计数
+	int init_tick;	///<定时器超时时间
+	int run;	///<0 pause, 1 run
+}*object_timer_t;
+
 void timer_add(HMOD hmod, int id, int init_tick);
 void timer_remove(HMOD hmod, int id);
 void timer_start(HMOD hmod, int id);

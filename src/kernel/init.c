@@ -74,25 +74,15 @@ static void install_sighandler(void)
  */
 static void register_class(void)
 {
-	object_t o;
 	object_thread_t ot;
 
-	///<注册处理函数集
-	register_tcp_io_operations();
-	register_udp_io_operations();
-	register_uart_io_operations();
-	
 	///<注册线程对象
 	register_thread_daemon();
 	
 	///<初始化线程对象
-	for(o = object_iter(object_class_type_thread, NULL); 
-		o != NULL;
-		o = object_iter(object_class_type_thread, o))
-	{
-		ot = (object_thread_t)o;
+	OBJECT_FOREACH(object_class_type_thread, object_thread_t, ot)
 		send_message((HMOD)ot, MSG_INIT, 0, 0);
-	}
+	OBJECT_FOREACH_END
 }
 
 /**
@@ -105,7 +95,6 @@ static int system_threads(void)
 	int ret;
 	sem_t wait;
 	pthread_t tid;
-	object_t o;
 	object_thread_t ot;
 
 	sem_init(&wait, 0, 0);
@@ -122,20 +111,15 @@ static int system_threads(void)
 	sem_destroy(&wait);
 
 	///<启动应用线程
-	for(o = object_iter(object_class_type_thread, NULL); 
-		o != NULL;
-		o = object_iter(object_class_type_thread, o))
-	{
-		ot = (object_thread_t)o;
-
-		debug(DEBUG, "==> start thread '%s'\n", o->name);
+	OBJECT_FOREACH(object_class_type_thread, object_thread_t, ot)
+		debug(DEBUG, "==> start thread '%s'\n", ((object_t)ot)->name);
 		ret = pthread_create(&ot->tid, NULL, ot->entry, ot);
 		if(ret != 0)
 		{
-			debug(RELEASE, "==> create thread '%s' error[%d]!\n", o->name, ret);
+			debug(RELEASE, "==> create thread '%s' error[%d]!\n", ((object_t)ot)->name, ret);
 			return -1;
 		}
-	}
+	OBJECT_FOREACH_END
 
 	return 0;
 }

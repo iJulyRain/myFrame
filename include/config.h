@@ -18,5 +18,10 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
+#define OBJ_NAME_MAX	32
+
+#define MSGQUEUE_MAX	16
+
+#define POLLER_MAX		20
 
 #endif //__CONFIG_H__ 
