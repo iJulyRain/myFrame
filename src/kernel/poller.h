@@ -20,8 +20,9 @@ struct poller
 };
 
 int poller_create(int maxfds);
-void poller_add(int pfd, int fd, void *ptr);
-void poller_del(int pfd, int fd);
-int poller_wait(int pfd, struct poller_event *pv, int timeout);
+int poller_add(int pfd, int fd, short events, void *ptr);
+int poller_mod(int pfd, int fd, short events, void *ptr);
+int poller_del(int pfd, int fd);
+int poller_wait(int pfd, struct poller_event *pv, int maxfds, int timeout);
 
 #endif

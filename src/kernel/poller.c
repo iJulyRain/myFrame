@@ -20,13 +20,13 @@ int poller_create(int maxfds)
     return (poller == NULL) ? -1 : (int)poller; 
 }
 
-void poller_add(int pfd, int fd, void *ptr)
+int poller_add(int pfd, int fd, short events, void *ptr)
 {
     int i;
     struct poller *poller;
 
 	if(pfd == -1)
-		return;
+		return -1;
 
     poller = (struct poller *)pfd;
 
@@ -36,20 +36,46 @@ void poller_add(int pfd, int fd, void *ptr)
             continue;
 
         poller->ev_list[i].fd.fd = fd;
-        poller->ev_list[i].fd.events = POLLIN;
+        poller->ev_list[i].fd.events = events;
         poller->ev_list[i].ptr = ptr;
 
         break;
     }
+
+	return 0;
 }
 
-void poll_del(int pfd, int fd)
+int poller_mod(int pfd, int fd, short events, void *ptr)
+{
+	int i;
+	struct poller *poller;
+
+	if(pfd == -1)
+		return -1;
+
+	poller = (struct poller *)pfd;
+
+	for(i = 0; i < poller->maxfds; i++)
+	{
+		if(poller->ev_list[i].fd.fd != fd)
+			continue;
+
+		poller->ev_list[i].fd.events = events;
+		poller->ev_list[i].ptr = ptr;
+
+		break;
+	}
+
+	return 0;
+}
+
+int poll_del(int pfd, int fd)
 {
     int i;
     struct poller *poller;
 
 	if(pfd == -1)
-		return;
+		return -1;
 
     poller = (struct poller *)pfd;
 
@@ -62,9 +88,11 @@ void poll_del(int pfd, int fd)
 
         break;
     }
+
+	return 0;
 }
 
-int poll_wait(int pfd, struct poller_event *ev, int timeout)
+int poll_wait(int pfd, struct poller_event *ev, int maxfds, int timeout)
 {
     int i, nfds;
     struct poller *poller;
@@ -75,6 +103,7 @@ int poll_wait(int pfd, struct poller_event *ev, int timeout)
     poller = (struct poller *)pfd;
 
     struct pollfd fds[poller->maxfds];
+	memset(fds, 0, sizeof(struct pollfd) * poller->maxfds);
 
     for(i = 0; i < poller->maxfds; i++)
         fds[i] = poller->ev_list[i].fd;
@@ -82,23 +111,19 @@ int poll_wait(int pfd, struct poller_event *ev, int timeout)
     nfds = poll(fds, poller->maxfds, timeout);
     if(nfds <= 0)
         goto err;
-    for(i = 0; i < poller->maxfds; i++)
+
+    for(i = 0; i < poller->maxfds && i < maxfds; i++)
     {
-        if(fds[i].revents & POLLIN)
-        {
-            debug(DEBUG, "fd: %d POLLIN\n", fds[i].fd);
-            *ev++ = poller->ev_list[i];
-        }
-        else if(fds[i].revents & POLLERR)
-        {
-            debug(DEBUG, "fd: %d POLLERR\n", fds[i].fd);
-            *ev++ = poller->ev_list[i];
-        }
-        else if(fds[i].revents & POLLNVAL)
-        {
-            debug(DEBUG, "fd: %d POLLNVAL\n", fds[i].fd);
-            *ev++ = poller->ev_list[i];
-        }
+        if(fds[i].revents & POLLIN
+		|| fds[i].revents & POLLOUT
+		|| fds[i].revents & POLLERR
+		|| fds[i].revents & POLLNVAL)
+		{
+			ev->fd = fds[i];
+			ev->ptr = poller->ev_list[i].ptr;
+
+			ev++;
+		}
     }
 
 err:

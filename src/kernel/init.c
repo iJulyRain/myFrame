@@ -22,16 +22,7 @@
  */
 static void init_print_level(void)
 {
-	char *p = NULL;
-
-	p = getenv("PRINT_LEVEL");
-	if(p == NULL)
-		p = "release";
-
-	if(!strcmp(p, "debug"))
-		set_print_level(0);
-	else
-		set_print_level(1);
+	log_init();
 }
 
 /**

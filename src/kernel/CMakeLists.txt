@@ -7,4 +7,4 @@ link_directories(${PROJECT_SOURCE_DIR}/src/app
 
 add_executable(${TARGET} ${main})
 
-target_link_libraries(${TARGET} common app mb sqlite3 zlog lua pthread dl)
+target_link_libraries(${TARGET} common app zlog pthread dl)

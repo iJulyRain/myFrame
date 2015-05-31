@@ -18,6 +18,11 @@
 #ifndef __DEF_H__
 #define __DEF_H__
 
+#include <stdio.h>
+#include <string.h>
+#include <pthread.h>
+#include <semaphore.h>
+
 #include "object.h"
 #include "list.h"
 #include "types.h"
