@@ -18,6 +18,8 @@
 #ifndef __MESSAGE_H__
 #define __MESSAGE_H__
 
+#include "def.h"
+
 /*
  * brief Ready to initialize modules
  */
