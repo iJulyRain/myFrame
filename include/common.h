@@ -43,19 +43,17 @@
 #include <sys/shm.h>
 #include <arpa/inet.h>
 
+///<公告头文件
 #include "def.h"
-#include "list.h"
-#include "object.h"
 #include "print.h"
-#include "types.h"
-#include "message.h"
-#include "timer.h"
-#include "config.h"
-
 #include "version.h"
 #include "who.h"
 
-#include "tools.h"
+///<功能组件
+#include "timer.h"
+#include "message.h"
+#include "poller.h"
+#include "aio.h"
 
 struct uart_setting
 {
@@ -77,8 +75,9 @@ struct net_setting
 struct object_information object_container[object_class_type_unknown];
 
 ////////////////////////////////////////////////////////////////////////
+int poller_id;	///<全局的poller
 int init(void);
-void idle(void);
+void loop(void);
 
 int register_thread_daemon(void);
 

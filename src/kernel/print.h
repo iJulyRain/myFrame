@@ -20,10 +20,7 @@
 
 #include <zlog.h>
 
-zlog_category_t *zc;
-
 //print level
-
 #define DEBUG 0	///<print level debug
 #define RELEASE 1 ///<print level release
 
@@ -36,9 +33,9 @@ int log_init(void);
 #define debug(level, format, arg...)	\
 	{	\
 		if(level == DEBUG) \
-			zlog_debug(zc, format, ##arg);\
+			dzlog_debug(format, ##arg);\
 		else if(level == RELEASE)\
-			zlog_info(zc, format, ##arg);\
+			dzlog_info(format, ##arg);\
 	}
 
 #endif

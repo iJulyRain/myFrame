@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	idle();	///<轮询
+	loop();	///<轮询
 	
 	return 0;
 }

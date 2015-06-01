@@ -21,18 +21,11 @@ int log_init(void)
 {
 	int rc;
 
-	rc = zlog_init("config/log.ini");
+	rc = dzlog_init("config/log.ini", "category");
 	if(rc)
 	{
-		printf("Step1. Can't load Log Config file 'config/log.ini'\n");
+		printf("Can't load Log Config file 'config/log.ini'\n");
 		return -1;
-	}
-
-	zc = zlog_get_category("category");
-	if(!zc)
-	{
-		printf("Step2. Can't load Category!\n");
-		return -2;
 	}
 
 	return 0;

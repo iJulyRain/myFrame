@@ -5,6 +5,7 @@
 #include <poll.h>
 #include <string.h>
 
+#include "def.h"
 #include "print.h"
 
 struct poller_event
@@ -17,12 +18,16 @@ struct poller
 {
     int maxfds;
     struct poller_event *ev_list;
+
+	pthread_mutex_t lock;
 };
 
-int poller_create(int maxfds);
+///<USER API
 int poller_add(int pfd, int fd, short events, void *ptr);
 int poller_mod(int pfd, int fd, short events, void *ptr);
 int poller_del(int pfd, int fd);
+
+int poller_create(int maxfds);
 int poller_wait(int pfd, struct poller_event *pv, int maxfds, int timeout);
 
 #endif

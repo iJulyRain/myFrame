@@ -1,8 +1,20 @@
 #ifndef __AIO_H__
 #define __AIO_H__
 
+#include <string.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <unistd.h>
+
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+
+#include "def.h"
 #include "object.h"
 #include "buffer.h"
+#include "print.h"
 
 /**
 * @brief IO接口对象
@@ -20,9 +32,9 @@ typedef struct object_io
 
 	//配置信息(拷贝) 字符串型
 	//串口：COM1 9600,8n1
-	//TCP client：TCP_CLIENT 192.168.1.100:10001
-	//UDP client：UDP_CLIENT 192.168.1.100:10001
-	//unixdomain client: UNIX_DOMAIN /tmp/myframe.socket
+	//TCP client：192.168.1.100:10001
+	//UDP client：192.168.1.100:10001
+	//unixdomain client: /tmp/myframe.socket
 	const char *settings;
 
 	void *addr;	///<网络IPC的地址信息
