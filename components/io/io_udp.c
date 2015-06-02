@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  aio_tcp.c
+ *       Filename:  io_udp.c
  *
- *    Description:  aio tcp
+ *    Description:  io udp
  *
  *        Version:  1.0
- *        Created:  06/01/2015 11:42:58 PM
+ *        Created:  06/01/2015 11:43:27 PM
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -15,26 +15,28 @@
  *
  * =====================================================================================
  */
-#include "aio.h"
+#include "io.h"
 
-static void tcp_info(void)
+static void udp_info(void)
 {
-	debug(RELEASE, "==> AIO(tcp) writen by li zhixian @2015.06.01 ^.^ <==")
+	debug(RELEASE, "==> IO(udp) writen by li zhixian @2015.06.01 ^.^ <==")
 }
 
-static int tcp_init(object_t parent, const char *settings)
+static int udp_init(object_t parent, const char *settings)
 {
 	object_io_t io;
 	struct sockaddr_in *addr;
 	char ip[16];
 	int port;
 
-	io = (object_io_t)parent;
+	assert(settings);
 
+	io = (object_io_t)parent;
 	io->settings = strdup(settings);
-	io->addr = (struct sockaddr_in *)calloc(1, sizeof(struct sockaddr_in));
 
 	debug(DEBUG, "settings: %s\n", io->settings);
+
+	io->addr = (struct sockaddr_in *)calloc(1, sizeof(struct sockaddr_in));
 
 	memset(ip, 0, sizeof(ip));
 	sscanf(settings, "%[^:]:%d", ip, &port);
@@ -52,7 +54,7 @@ static int tcp_init(object_t parent, const char *settings)
 	return 0;
 }
 
-static int tcp_connect(object_t parent)
+static int udp_connect(object_t parent)
 {
 	object_io_t io;
 	struct sockaddr_in *addr;
@@ -68,7 +70,7 @@ static int tcp_connect(object_t parent)
 	return io->isconnect;
 }
 
-static int tcp_state(object_t parent)
+static int udp_state(object_t parent)
 {
 	object_io_t io;
 
@@ -77,39 +79,39 @@ static int tcp_state(object_t parent)
 	return io->isconnect;
 }
 
-static void tcp_close(object_t parent)
+static void udp_close(object_t parent)
 {
 	object_io_t io;
-
 	io = (object_io_t)parent;
 
+	io->isconnect = OFFLINE;
 	close(io->fd);
 
 	io->fd = -1;
 }
 
-static int tcp_recv(object_t parent)
+static int udp_recv(object_t parent)
 {
 	return 0;
 }
 
-static int tcp_send(object_t parent)
+static int udp_send(object_t parent)
 {
 	return 0;
 }
 
-static struct object_io aio= 
+static struct object_io io= 
 {
-	._info		= 	tcp_info,
-	._init 		= 	tcp_init,
-	._connect 	= 	tcp_connect,
-	._state 	= 	tcp_state,
-	._close 	= 	tcp_close,
-	._recv 		= 	tcp_recv,
-	._send 		= 	tcp_send
+	._info		= 	udp_info,
+	._init 		= 	udp_init,
+	._connect 	= 	udp_connect,
+	._state 	= 	udp_state,
+	._close 	= 	udp_close,
+	._recv 		= 	udp_recv,
+	._send 		= 	udp_send
 };
 
-void register_aio_tcp(void)
+void register_io_udp(void)
 {
-	object_addend(&aio.parent, "aio tcp", object_class_type_io);
+	object_addend(&io.parent, "io udp", object_class_type_io);
 }

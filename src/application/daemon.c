@@ -17,6 +17,8 @@
  */
 #include "common.h"
 
+#include "daemon.h"
+
 #define NAME "daemon"
 
 /**

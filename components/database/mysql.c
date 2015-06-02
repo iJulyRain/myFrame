@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  init.c
+ *       Filename:  mysql.c
  *
- *    Description:  app init
+ *    Description:  mysql
  *
  *        Version:  1.0
- *        Created:  06/02/2015 11:33:47 PM
+ *        Created:  06/02/2015 11:18:10 PM
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -15,11 +15,4 @@
  *
  * =====================================================================================
  */
-#include "common.h"
 
-#include "daemon.h"	///<包含应用程序的头文件
-
-void app_init(int argc, char **argv)
-{
-	register_thread_daemon();
-}

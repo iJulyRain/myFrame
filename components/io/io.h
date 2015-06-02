@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <fcntl.h>
 
 #include "def.h"
 #include "object.h"
@@ -49,5 +50,11 @@ typedef struct object_io
 	int  (*_recv)	(object_t parent);	///<读
 	int  (*_send)	(object_t parent);	///<写
 }*object_io_t;
+
+void register_all_io(void);
+
+void register_io_tcp(void);
+void register_io_udp(void);
+void register_io_com(void);
 
 #endif

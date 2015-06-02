@@ -1,9 +1,9 @@
 /*
  * =====================================================================================
  *
- *       Filename:  aio.c
+ *       Filename:  io.c
  *
- *    Description:  aio
+ *    Description:  io
  *
  *        Version:  1.0
  *        Created:  05/26/2015 09:02:39 PM
@@ -15,4 +15,11 @@
  *
  * =====================================================================================
  */
+#include "io.h"
 
+void register_all_io(void)
+{
+	register_io_tcp();
+	register_io_udp();
+	register_io_com();
+}

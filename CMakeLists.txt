@@ -11,7 +11,9 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_C_FLAGS "-Wall -g")
 
 include_directories(${PROJECT_SOURCE_DIR}/include
-					${PROJECT_SOURCE_DIR}/components/include
+					${PROJECT_SOURCE_DIR}/components/io
+					${PROJECT_SOURCE_DIR}/components/buffer
+					${PROJECT_SOURCE_DIR}/components/database
 					${PROJECT_SOURCE_DIR}/src/kernel
 					${PROJECT_SOURCE_DIR}/utilities/include
 					${PROJECT_SOURCE_DIR}/utilities/sqlite3
@@ -23,5 +25,5 @@ include_directories(${PROJECT_SOURCE_DIR}/include
 					)
 
 add_subdirectory(utilities)
-#add_subdirectory(components)
+add_subdirectory(components)
 add_subdirectory(src)

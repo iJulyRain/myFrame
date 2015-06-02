@@ -53,7 +53,7 @@
 #include "timer.h"
 #include "message.h"
 #include "poller.h"
-#include "aio.h"
+#include "io.h"
 
 struct uart_setting
 {
@@ -76,7 +76,10 @@ struct object_information object_container[object_class_type_unknown];
 
 ////////////////////////////////////////////////////////////////////////
 int poller_id;	///<全局的poller
-int init(void);
+
+int init(int argc, char **argv);
+void app_init(int argc, char **argv);
+
 void loop(void);
 
 int register_thread_daemon(void);

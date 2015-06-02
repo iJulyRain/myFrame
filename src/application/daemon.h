@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  aio_udp.c
+ *       Filename:  daemon.h
  *
- *    Description:  aio udp
+ *    Description:  daemon 
  *
  *        Version:  1.0
- *        Created:  06/01/2015 11:43:27 PM
+ *        Created:  06/02/2015 11:34:42 PM
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -15,4 +15,9 @@
  *
  * =====================================================================================
  */
+#ifndef __DAEMON_H__
+#define __DAEMON_H__
 
+int register_thread_daemon(void);
+
+#endif
