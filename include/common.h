@@ -55,23 +55,6 @@
 #include "poller.h"
 #include "io.h"
 
-struct uart_setting
-{
-	int which;
-
-	int baud;
-	int databit;
-	int stopbit; 
-	int parity;
-};
-
-struct net_setting
-{
-	char ip[16];
-	int port;
-};
-
-
 struct object_information object_container[object_class_type_unknown];
 
 ////////////////////////////////////////////////////////////////////////

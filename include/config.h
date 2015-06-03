@@ -24,4 +24,7 @@
 
 #define POLLER_MAX		20
 
+#define BUFFER_SIZE		512	///<buffer初始长度/每次增加的长度
+#define BUFFER_MAX		2 * 1024
+
 #endif //__CONFIG_H__ 
