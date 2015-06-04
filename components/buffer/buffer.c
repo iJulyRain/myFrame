@@ -42,13 +42,13 @@ object_buf_t buffer_new(void)
 	return ob;
 }
 
-///<添加size长度的buffer数据到缓冲区中（输出缓冲）
-int buffer_add(object_buf_t buf, const char *buffer, size_t size)
+///<添加size长度的buffer数据到缓冲区中
+int buffer_add(buf_base_t buf, const char *buffer, size_t size)
 {
 	int left_size;
 	buf_base_t bb;
 
-	bb = &buf->write_buf;
+	bb = buf; 
 
 	///<剩余的长度够追加
 	left_size = bb->size - bb->write_pos;
@@ -70,7 +70,7 @@ int buffer_add(object_buf_t buf, const char *buffer, size_t size)
 			memcpy(bb->buffer + bb->write_pos, buffer, size);
 			bb->write_pos += size;
 		}
-	///<剩余的长度不够追加，且头部空余和尾部空余之和也不够，且增加size后未超过BUFFER_MAX，平移数据&&追加
+		///<剩余的长度不够追加，且头部空余和尾部空余之和也不够，且增加size后未超过BUFFER_MAX，平移数据&&追加
 		else if(bb->read_pos + left_size < size)
 		{
 			if(bb->size + size <= BUFFER_MAX)
@@ -89,7 +89,7 @@ int buffer_add(object_buf_t buf, const char *buffer, size_t size)
 				memcpy(bb->buffer + bb->write_pos, buffer, size);
 				bb->write_pos += size;
 			}
-	///<剩余的长度不够追加，且头部空余和尾部空余之和也不够，且增加size后已经超过BUFFER_MAX，丢弃（极端情况，不可能无限制增加buffer）
+			///<剩余的长度不够追加，且头部空余和尾部空余之和也不够，且增加size后已经超过BUFFER_MAX，丢弃（极端情况，不可能无限制增加buffer）
 			else if(bb->size + size > BUFFER_MAX)
 			{
 				///<do nothing
@@ -101,12 +101,12 @@ int buffer_add(object_buf_t buf, const char *buffer, size_t size)
 	return 0;
 }
 
-///<从缓冲区中移除size长度的数据（输入缓冲），移除的数据在buffer中
-int buffer_remove(object_buf_t buf, char *buffer, size_t size)
+///<从缓冲区中移除size长度的数据，移除的数据在buffer中
+int buffer_remove(buf_base_t buf, char *buffer, size_t size)
 {
 	buf_base_t bb;
 
-	bb = &buf->read_buf;
+	bb = buf;
 
 	///<如果缓冲区没有那么多数据可读
 	///<包括0缓冲区可读字节为空
@@ -115,8 +115,9 @@ int buffer_remove(object_buf_t buf, char *buffer, size_t size)
 
 	if(size == 0)
 		return 0;
-	
-	memcpy(buffer, bb->buffer + bb->read_pos, size);
+
+	if(buffer)
+		memcpy(buffer, bb->buffer + bb->read_pos, size);
 
 	bb->read_pos += size;
 
@@ -124,13 +125,13 @@ int buffer_remove(object_buf_t buf, char *buffer, size_t size)
 }
 
 ///<从buffer中匹配与what相同的字节串，返回匹配到的字节串在缓冲中的起始地址
-char *buffer_find(object_buf_t buf, const char *what, size_t size)
+char *buffer_find(buf_base_t buf, const char *what, size_t size)
 {
 	int i, n, gotit;
 	char *where;
 	buf_base_t bb;
 
-	bb = &buf->read_buf;
+	bb = buf;
 
 	where = NULL;
 	for(i = bb->read_pos; (i + size) <= bb->write_pos; i++)
@@ -155,11 +156,11 @@ char *buffer_find(object_buf_t buf, const char *what, size_t size)
 }
 
 ///<从输入缓冲中读取size长度的数据到buffer中，输入缓冲区不改变
-int buffer_read(object_buf_t buf, char *buffer, size_t size)
+int buffer_read(buf_base_t buf, char *buffer, size_t size)
 {
 	buf_base_t bb;
 
-	bb = &buf->read_buf;
+	bb = buf;
 
 	///<如果缓冲区没有那么多数据可读
 	///<包括0缓冲区可读字节为空
@@ -179,4 +180,14 @@ void buffer_clear(buf_base_t buf)
 {
 	buf->read_pos = 0;
 	buf->write_pos = 0;
+}
+
+///<获取缓冲区数据长度
+int buffer_size(buf_base_t buf)
+{
+	buf_base_t bb;
+
+	bb = buf;
+
+	return bb->size;
 }

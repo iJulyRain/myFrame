@@ -40,7 +40,7 @@ typedef struct object_io
 
 	void *addr;	///<网络IPC的地址信息
 
-	object_buf_t rbuf, wbuf;	///<读写缓存
+	object_buf_t buffer;	///<读写缓存
 
 	void (*_info)	(void);	///<接口版本信息
 	int  (*_init)	(object_t parent, const char* settings);	///<初始化
@@ -56,5 +56,11 @@ void register_all_io(void);
 void register_io_tcp(void);
 void register_io_udp(void);
 void register_io_com(void);
+
+
+int io_state(object_t parent);
+void io_close(object_t parent);
+int io_recv(object_t parent);
+int io_send(object_t parent);
 
 #endif

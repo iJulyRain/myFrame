@@ -11,9 +11,10 @@
 
 typedef struct buf_base
 {
-	int size;
-	char *buffer;
-	int read_pos, write_pos;
+	int size;		///<缓冲区长度
+	char *buffer;	///<缓冲区
+
+	int read_pos, write_pos;	///<读写偏移
 }*buf_base_t;
 
 /**
@@ -28,10 +29,11 @@ typedef struct object_buf
 }*object_buf_t;	
 
 object_buf_t buffer_new(void);
-int buffer_add(object_buf_t buf, const char *buffer, size_t size);
-int buffer_remove(object_buf_t buf, char *buffer, size_t size);
-char *buffer_find(object_buf_t buf, const char *what, size_t size);
-int buffer_read(object_buf_t buf, char *buffer, size_t size);
+int buffer_add(buf_base_t buf, const char *buffer, size_t size);
+int buffer_remove(buf_base_t buf, char *buffer, size_t size);
+char *buffer_find(buf_base_t buf, const char *what, size_t size);
+int buffer_read(buf_base_t buf, char *buffer, size_t size);
 void buffer_clear(buf_base_t buf);
+int buffer_size(buf_base_t buf);
 
 #endif

@@ -48,8 +48,7 @@ static int udp_init(object_t parent, const char *settings)
 
 	io->isconnect = OFFLINE;
 
-	io->rbuf = buffer_new();
-	io->wbuf = buffer_new();
+	io->buffer = buffer_new();
 
 	return 0;
 }
@@ -72,32 +71,22 @@ static int udp_connect(object_t parent)
 
 static int udp_state(object_t parent)
 {
-	object_io_t io;
-
-	io = (object_io_t)parent;
-
-	return io->isconnect;
+	return io_state(parent); 
 }
 
 static void udp_close(object_t parent)
 {
-	object_io_t io;
-	io = (object_io_t)parent;
-
-	io->isconnect = OFFLINE;
-	close(io->fd);
-
-	io->fd = -1;
+	io_close(parent);
 }
 
 static int udp_recv(object_t parent)
 {
-	return 0;
+	return io_recv(parent);
 }
 
 static int udp_send(object_t parent)
 {
-	return 0;
+	return io_send(parent);
 }
 
 static struct object_io io= 
