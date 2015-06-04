@@ -19,10 +19,10 @@
 
 static void tcp_info(void)
 {
-	debug(RELEASE, "==> AIO(tcp) writen by li zhixian @2015.06.01 ^.^ <==")
+	debug(RELEASE, "==> AIO(tcp) writen by li zhixian @2015.06.01 ^.^ <==\n");
 }
 
-static int tcp_init(object_t parent, const char *settings)
+static int tcp_init(object_t parent, HMOD hmod, const char *settings)
 {
 	object_io_t io;
 	struct sockaddr_in *addr;
@@ -33,6 +33,8 @@ static int tcp_init(object_t parent, const char *settings)
 
 	io = (object_io_t)parent;
 	io->settings = strdup(settings);
+	io->hmod = hmod;
+	io->mode = tcp_client;
 
 	debug(DEBUG, "settings: %s\n", io->settings);
 
@@ -63,6 +65,7 @@ static int tcp_connect(object_t parent)
 
 	io->fd = socket(AF_INET, SOCK_STREAM, 0);
 	assert(io->fd > 0);
+	fcntl(io->fd, F_SETFL, fcntl(io->fd, F_GETFL) | O_NONBLOCK);
 
 	io->isconnect = connect(io->fd, (struct sockaddr *)io->addr, sizeof(struct sockaddr_in)) == 0 ? ONLINE : OFFLINE;
 

@@ -33,9 +33,36 @@ typedef struct object
 	list_t list;	///<节点
 }*object_t;
 
+/**
+ * @brief 对象类型
+ */
+enum object_class_type
+{
+	object_class_type_thread = 0,	///<线程对象
+	object_class_type_timer,		///<定时器对象
+	object_class_type_io,			///<IO对象
+	object_class_type_unknown
+};
+
+/**
+ * @brief 对象容器类型
+ */
+struct object_information
+{
+	enum object_class_type type;	///<类型
+
+	pthread_mutex_t lock;		///<锁
+
+	int size;					///<长度
+	list_t list;				///<链表头
+};
+
 void object_container_init(void);
+object_t object_container_find(const char *name, struct object_information *container);
 object_t object_find(const char *name, int type);
+void object_container_addend(object_t object, struct object_information *container);
 void object_addend(object_t object, const char *name, int type);
+void object_container_delete(object_t object, struct object_information *container);
 void object_delete(object_t object);
 
 #define OBJECT_FOREACH(type, T, pt) \

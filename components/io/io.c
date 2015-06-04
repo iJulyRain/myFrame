@@ -24,6 +24,24 @@ void register_all_io(void)
 	register_io_com();
 }
 
+object_io_t new_object_io(const char *io_type, const char *alias)
+{
+	object_io_t iot, io;
+
+	iot = (object_io_t)object_find(io_type, object_class_type_io);
+	if(iot == NULL)
+		return NULL;
+	
+	io = (object_io_t)calloc(1, sizeof(struct object_io));
+	assert(io);
+
+	*io = *iot;
+
+	strcpy(io->parent.name, alias);
+
+	return io;
+}
+
 int io_state(object_t parent)
 {
 	object_io_t io;
@@ -76,7 +94,7 @@ int io_send(object_t parent)
 	io = (object_io_t)parent;
 
 	size = buffer_size(&io->buffer->write_buf); 
-	if(size = 0)
+	if(size == 0)
 		return 0;
 	else if(size > 0)
 	{

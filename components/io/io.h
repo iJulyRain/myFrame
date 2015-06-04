@@ -17,6 +17,15 @@
 #include "buffer.h"
 #include "print.h"
 
+enum mode
+{
+	tcp_client = 0,
+	tcp_server,
+	udp_client,
+	udp_server,
+	uart
+};
+
 /**
 * @brief IO接口对象
 * 目前支持
@@ -30,6 +39,7 @@ typedef struct object_io
 
 	int fd;
 	int isconnect;
+	int mode;	///<模式
 
 	//配置信息(拷贝) 字符串型
 	//串口：COM1 9600,8n1
@@ -43,7 +53,7 @@ typedef struct object_io
 	object_buf_t buffer;	///<读写缓存
 
 	void (*_info)	(void);	///<接口版本信息
-	int  (*_init)	(object_t parent, const char* settings);	///<初始化
+	int  (*_init)	(object_t parent, HMOD hmod, const char* settings);	///<初始化
 	int  (*_connect)(object_t parent);	///<连接
 	int  (*_state)	(object_t parent);	///<状态
 	void (*_close)	(object_t parent);	///<关闭
@@ -51,12 +61,13 @@ typedef struct object_io
 	int  (*_send)	(object_t parent);	///<写
 }*object_io_t;
 
+object_io_t new_object_io(const char *io_type, const char *alias);
+
 void register_all_io(void);
 
 void register_io_tcp(void);
 void register_io_udp(void);
 void register_io_com(void);
-
 
 int io_state(object_t parent);
 void io_close(object_t parent);

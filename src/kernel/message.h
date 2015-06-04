@@ -45,9 +45,9 @@
 
 #define MSG_AIOERR		0x0006
 
-#define MSG_CONNECT		0x0007
+#define MSG_AIOCONN		0x0007
 
-#define MSG_BREAK		0x0008
+#define MSG_AIOBREAK	0x0008
 
 /*
  * brief Indicates a message has post

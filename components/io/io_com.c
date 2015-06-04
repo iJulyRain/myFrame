@@ -26,10 +26,10 @@ struct com
 
 static void com_info(void)
 {
-	debug(RELEASE, "==> AIO(com) writen by li zhixian @2015.06.01 ^.^ <==")
+	debug(RELEASE, "==> AIO(com) writen by li zhixian @2015.06.01 ^.^ <==\n");
 }
 
-static int com_init(object_t parent, const char *settings)
+static int com_init(object_t parent, HMOD hmod, const char *settings)
 {
 	object_io_t io;
 	struct com *com;
@@ -38,6 +38,8 @@ static int com_init(object_t parent, const char *settings)
 
 	io = (object_io_t)parent;
 	io->settings = strdup(settings);
+	io->hmod = hmod;
+	io->mode = uart;
 
 	debug(DEBUG, "settings: %s\n", io->settings);
 

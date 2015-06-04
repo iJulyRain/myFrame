@@ -40,30 +40,6 @@
 #define EXIT_LOCK(lock) pthread_mutex_unlock(lock)
 
 /**
- * @brief 对象类型
- */
-enum object_class_type
-{
-	object_class_type_thread = 0,	///<线程对象
-	object_class_type_timer,		///<定时器对象
-	object_class_type_io,			///<IO对象
-	object_class_type_unknown
-};
-
-/**
- * @brief 对象容器类型
- */
-struct object_information
-{
-	enum object_class_type type;	///<类型
-
-	pthread_mutex_t lock;		///<锁
-
-	int size;					///<长度
-	list_t list;				///<链表头
-};
-
-/**
 * @brief 线程模块句柄
 */
 typedef UINT HMOD;
@@ -110,6 +86,7 @@ typedef struct object_thread
 	thread_proc_t thread_proc;	///<线程处理函数
 
 	DWORD add_data;	///<附加参数
+	struct object_information io_container;	///<线程管理的IO容器
 
 	struct msgqueue msgqueue;	///<消息队列
 }*object_thread_t;

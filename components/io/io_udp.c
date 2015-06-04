@@ -19,10 +19,10 @@
 
 static void udp_info(void)
 {
-	debug(RELEASE, "==> IO(udp) writen by li zhixian @2015.06.01 ^.^ <==")
+	debug(RELEASE, "==> IO(udp) writen by li zhixian @2015.06.01 ^.^ <==\n");
 }
 
-static int udp_init(object_t parent, const char *settings)
+static int udp_init(object_t parent, HMOD hmod, const char *settings)
 {
 	object_io_t io;
 	struct sockaddr_in *addr;
@@ -33,6 +33,8 @@ static int udp_init(object_t parent, const char *settings)
 
 	io = (object_io_t)parent;
 	io->settings = strdup(settings);
+	io->hmod = hmod;
+	io->mode = udp_client;
 
 	debug(DEBUG, "settings: %s\n", io->settings);
 

@@ -48,7 +48,7 @@ void loop(void)
 					post_message(io->hmod, MSG_AIOIN, 0, (LPARAM)io);	///<有读事件
 				else if(rc == -1)	///<链接断开（TCP/UDP）
 
-					post_message(io->hmod, MSG_BREAK, 0, (LPARAM)io);	///<有读事件
+					post_message(io->hmod, MSG_AIOBREAK, 0, (LPARAM)io);	///<有读事件
 				else if(rc == -2)	///<读出错
 					post_message(io->hmod, MSG_AIOERR, 0, (LPARAM)io);	///<有读事件
 			}
@@ -66,7 +66,7 @@ void loop(void)
 			}
 			if(ev[i].fd.revents & POLLNVAL)///<描述符被关闭
 			{
-				post_message(io->hmod, MSG_BREAK, 0, (LPARAM)io);
+				post_message(io->hmod, MSG_AIOBREAK, 0, (LPARAM)io);
 			}
 		}
 	}
