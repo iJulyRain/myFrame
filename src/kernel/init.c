@@ -120,6 +120,8 @@ int init(int argc, char **argv)
 
 	install_sighandler();	///<安装信号处理函数
 	register_class();
+	
+	poller_create(POLLER_MAX);
 
 	app_init(argc, argv);
 

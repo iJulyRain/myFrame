@@ -16,6 +16,8 @@
 #include "object.h"
 #include "buffer.h"
 #include "print.h"
+#include "errno.h"
+#include "poller.h"
 
 enum mode
 {
@@ -51,14 +53,19 @@ typedef struct object_io
 	void *addr;	///<网络IPC的地址信息
 
 	object_buf_t buffer;	///<读写缓存
+	poller_event_t event;	///<托管到poller的event
 
 	void (*_info)	(void);	///<接口版本信息
 	int  (*_init)	(object_t parent, HMOD hmod, const char* settings);	///<初始化
 	int  (*_connect)(object_t parent);	///<连接
+	int  (*_getfd)	(object_t parent);	///<描述符
 	int  (*_state)	(object_t parent);	///<状态
 	void (*_close)	(object_t parent);	///<关闭
-	int  (*_recv)	(object_t parent);	///<读
-	int  (*_send)	(object_t parent);	///<写
+	int  (*_input)	(object_t parent, char *buffer, int size, int clear);	///<读
+	int  (*_output)	(object_t parent, const char *buffer, int size);	///<写
+
+	int  (*_recv)	(object_t parent);	///<读缓冲
+	int  (*_send)	(object_t parent);	///<写缓冲
 }*object_io_t;
 
 object_io_t new_object_io(const char *io_type, const char *alias);
@@ -69,8 +76,11 @@ void register_io_tcp(void);
 void register_io_udp(void);
 void register_io_com(void);
 
+int io_getfd(object_t parent);
 int io_state(object_t parent);
 void io_close(object_t parent);
+int io_output(object_t parent, const char *buffer, int size);
+int io_input(object_t parent, char *buffer, int size, int clear);
 int io_recv(object_t parent);
 int io_send(object_t parent);
 

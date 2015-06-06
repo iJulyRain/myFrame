@@ -52,7 +52,8 @@ static int com_init(object_t parent, HMOD hmod, const char *settings)
 
 	io->isconnect = OFFLINE;
 
-	io->buffer = buffer_new();
+	io->buffer = buffer_create();
+	io->event = poller_event_create(io);
 
 	return 0;
 }
@@ -75,6 +76,11 @@ static int com_connect(object_t parent)
 	io->isconnect = ONLINE;
 
 	return io->isconnect;
+}
+
+static int com_getfd(object_t parent)
+{
+	return io_getfd(parent);
 }
 
 static int com_state(object_t parent)
@@ -102,6 +108,7 @@ static struct object_io io=
 	._info		= 	com_info,
 	._init 		= 	com_init,
 	._connect 	= 	com_connect,
+	._getfd		=	com_getfd,
 	._state 	= 	com_state,
 	._close 	= 	com_close,
 	._recv 		= 	com_recv,

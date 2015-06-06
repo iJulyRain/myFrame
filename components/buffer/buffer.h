@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+#include "def.h"
 #include "print.h"
 #include "object.h"
 
@@ -13,8 +14,9 @@ typedef struct buf_base
 {
 	int size;		///<缓冲区长度
 	char *buffer;	///<缓冲区
-
 	int read_pos, write_pos;	///<读写偏移
+
+	pthread_mutex_t lock;
 }*buf_base_t;
 
 /**
@@ -28,7 +30,7 @@ typedef struct object_buf
 	struct buf_base write_buf;
 }*object_buf_t;	
 
-object_buf_t buffer_new(void);
+object_buf_t buffer_create(void);
 int buffer_add(buf_base_t buf, const char *buffer, size_t size);
 int buffer_remove(buf_base_t buf, char *buffer, size_t size);
 char *buffer_find(buf_base_t buf, const char *what, size_t size);

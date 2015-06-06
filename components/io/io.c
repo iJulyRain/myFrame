@@ -42,6 +42,15 @@ object_io_t new_object_io(const char *io_type, const char *alias)
 	return io;
 }
 
+int io_getfd(object_t parent) 
+{
+	object_io_t io;
+
+	io = (object_io_t)parent;
+
+	return io->fd;
+}
+
 int io_state(object_t parent)
 {
 	object_io_t io;
@@ -94,9 +103,7 @@ int io_send(object_t parent)
 	io = (object_io_t)parent;
 
 	size = buffer_size(&io->buffer->write_buf); 
-	if(size == 0)
-		return 0;
-	else if(size > 0)
+	if(size > 0)
 	{
 		memset(sendbuf, 0, sizeof(char) * BUFFER_MAX);
 		size = buffer_read(&io->buffer->write_buf, sendbuf, size);
@@ -107,6 +114,43 @@ int io_send(object_t parent)
 		else if(txnum > 0)
 			buffer_remove(&io->buffer->write_buf, NULL, txnum);
 	}
+	else if(size == 0)	///<发送完成
+	{
+		poller_event_clrev(io->event, POLLOUT);	
+		poller_mod(0, io->event);
 
-	return 0;
+		return 0;
+	}
+
+	return 1;
+}
+
+int io_output(object_t parent, const char *buffer, int size)
+{
+	object_io_t io;
+	io = (object_io_t)parent;
+	int rc;
+
+	///<添加到缓冲区
+	rc = buffer_add(&io->buffer->write_buf, buffer, size);
+
+	///<使能写事件
+	poller_event_setev(io->event, POLLOUT);	
+	poller_mod(0, io->event);
+
+	return rc;
+}
+
+int io_input(object_t parent, char *buffer, int size, int clear)
+{
+	object_io_t io;
+	io = (object_io_t)parent;
+	int rc;
+
+	if(clear)
+		rc = buffer_remove(&io->buffer->read_buf, buffer, size);
+	else
+		rc = buffer_read(&io->buffer->read_buf, buffer, size);
+	
+	return rc;
 }

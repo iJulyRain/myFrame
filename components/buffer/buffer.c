@@ -26,10 +26,12 @@ static void buf_base_init(buf_base_t buf)
 
 	buf->read_pos = 0;
 	buf->write_pos = 0;
+
+	INIT_LOCK(&buf->lock);
 }
 
 ///<创建一个buffer对象
-object_buf_t buffer_new(void)
+object_buf_t buffer_create(void)
 {
 	object_buf_t ob;
 
@@ -45,10 +47,14 @@ object_buf_t buffer_new(void)
 ///<添加size长度的buffer数据到缓冲区中
 int buffer_add(buf_base_t buf, const char *buffer, size_t size)
 {
-	int left_size;
+	int rc, left_size;
 	buf_base_t bb;
 
 	bb = buf; 
+
+	ENTER_LOCK(&bb->lock);
+
+	rc = size;
 
 	///<剩余的长度够追加
 	left_size = bb->size - bb->write_pos;
@@ -93,12 +99,15 @@ int buffer_add(buf_base_t buf, const char *buffer, size_t size)
 			else if(bb->size + size > BUFFER_MAX)
 			{
 				///<do nothing
+				rc = -1;
 				debug(RELEASE, "read buffer overflow!\n");
 			}
 		}
 	}
+
+	EXIT_LOCK(&bb->lock);
 	
-	return 0;
+	return rc;
 }
 
 ///<从缓冲区中移除size长度的数据，移除的数据在buffer中
@@ -108,18 +117,21 @@ int buffer_remove(buf_base_t buf, char *buffer, size_t size)
 
 	bb = buf;
 
+	ENTER_LOCK(&bb->lock);
 	///<如果缓冲区没有那么多数据可读
 	///<包括0缓冲区可读字节为空
 	if(size > (bb->write_pos - bb->read_pos))
 		size = bb->write_pos - bb->read_pos;
 
-	if(size == 0)
-		return 0;
+	if(size >  0)
+	{
+		if(buffer)
+			memcpy(buffer, bb->buffer + bb->read_pos, size);
 
-	if(buffer)
-		memcpy(buffer, bb->buffer + bb->read_pos, size);
+		bb->read_pos += size;
+	}
 
-	bb->read_pos += size;
+	EXIT_LOCK(&bb->lock);
 
 	return size;
 }
@@ -132,6 +144,8 @@ char *buffer_find(buf_base_t buf, const char *what, size_t size)
 	buf_base_t bb;
 
 	bb = buf;
+
+	ENTER_LOCK(&bb->lock);
 
 	where = NULL;
 	for(i = bb->read_pos; (i + size) <= bb->write_pos; i++)
@@ -152,6 +166,8 @@ char *buffer_find(buf_base_t buf, const char *what, size_t size)
 			break;
 	}
 
+	EXIT_LOCK(&bb->lock);
+
 	return where;
 }
 
@@ -162,15 +178,17 @@ int buffer_read(buf_base_t buf, char *buffer, size_t size)
 
 	bb = buf;
 
+	ENTER_LOCK(&bb->lock);
+
 	///<如果缓冲区没有那么多数据可读
 	///<包括0缓冲区可读字节为空
 	if(size > (bb->write_pos - bb->read_pos))
 		size = bb->write_pos - bb->read_pos;
 
-	if(size == 0)
-		return 0;
-	
-	memcpy(buffer, bb->buffer + bb->read_pos, size);
+	if(size > 0)
+		memcpy(buffer, bb->buffer + bb->read_pos, size);
+
+	EXIT_LOCK(&bb->lock);
 
 	return size;
 }
@@ -178,8 +196,12 @@ int buffer_read(buf_base_t buf, char *buffer, size_t size)
 ///<清空缓冲区
 void buffer_clear(buf_base_t buf)
 {
+	ENTER_LOCK(&buf->lock);
+
 	buf->read_pos = 0;
 	buf->write_pos = 0;
+
+	EXIT_LOCK(&buf->lock);
 }
 
 ///<获取缓冲区数据长度

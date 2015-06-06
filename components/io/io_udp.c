@@ -50,7 +50,8 @@ static int udp_init(object_t parent, HMOD hmod, const char *settings)
 
 	io->isconnect = OFFLINE;
 
-	io->buffer = buffer_new();
+	io->buffer = buffer_create();
+	io->event = poller_event_create(io);
 
 	return 0;
 }
@@ -69,6 +70,11 @@ static int udp_connect(object_t parent)
 	io->isconnect = connect(io->fd, (struct sockaddr *)io->addr, sizeof(struct sockaddr_in)) == 0 ? 1 : 0;
 
 	return io->isconnect;
+}
+
+static int udp_getfd(object_t parent)
+{
+	return io_getfd(parent);
 }
 
 static int udp_state(object_t parent)
@@ -96,6 +102,7 @@ static struct object_io io=
 	._info		= 	udp_info,
 	._init 		= 	udp_init,
 	._connect 	= 	udp_connect,
+	._getfd		= 	udp_getfd,
 	._state 	= 	udp_state,
 	._close 	= 	udp_close,
 	._recv 		= 	udp_recv,

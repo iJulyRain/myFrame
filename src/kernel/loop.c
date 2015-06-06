@@ -27,13 +27,10 @@ void loop(void)
 	struct poller_event ev[POLLER_MAX];
 	object_io_t io;
 
-	poller_id = poller_create(POLLER_MAX);
-	assert(poller_id != -1);
-
 	for(;;)
 	{	
 		memset(ev, 0, sizeof(struct poller_event) * POLLER_MAX);
-		nfds = poller_wait(poller_id, ev, POLLER_MAX, 1000);
+		nfds = poller_wait(0, ev, POLLER_MAX, 1000);
 		if(nfds <= 0)
 			continue;
 
@@ -47,7 +44,6 @@ void loop(void)
 				if(rc == 0)	///<读到数据
 					post_message(io->hmod, MSG_AIOIN, 0, (LPARAM)io);	///<有读事件
 				else if(rc == -1)	///<链接断开（TCP/UDP）
-
 					post_message(io->hmod, MSG_AIOBREAK, 0, (LPARAM)io);	///<有读事件
 				else if(rc == -2)	///<读出错
 					post_message(io->hmod, MSG_AIOERR, 0, (LPARAM)io);	///<有读事件
