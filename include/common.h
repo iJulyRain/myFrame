@@ -44,25 +44,25 @@
 #include <arpa/inet.h>
 
 ///<公告头文件
+#include "config.h"
 #include "def.h"
-#include "print.h"
+#include "types.h"
 #include "version.h"
 #include "who.h"
 
-///<功能组件
-#include "timer.h"
+///<内核
+#include "list.h"
 #include "message.h"
+#include "object.h"
 #include "poller.h"
+#include "print.h"
+#include "thread.h"
+#include "timer.h"
+#include "timestamp.h"
+
+///<组件
+#include "buffer.h"
 #include "io.h"
-
-struct object_information object_container[object_class_type_unknown];
-
-////////////////////////////////////////////////////////////////////////
-int init(int argc, char **argv);
-void app_init(int argc, char **argv);
-
-void loop(void);
-
-int register_thread_daemon(void);
+#include "database.h"
 
 #endif

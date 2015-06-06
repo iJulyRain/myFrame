@@ -105,6 +105,8 @@ int buffer_add(buf_base_t buf, const char *buffer, size_t size)
 		}
 	}
 
+	debug(DEBUG, "==>buffer(size:%d, read_pos:%d, write_pos: %d)\n", bb->size, bb->read_pos, bb->write_pos);
+
 	EXIT_LOCK(&bb->lock);
 	
 	return rc;
@@ -132,6 +134,8 @@ int buffer_remove(buf_base_t buf, char *buffer, size_t size)
 	}
 
 	EXIT_LOCK(&bb->lock);
+
+	debug(DEBUG, "==>buffer(size:%d, read_pos:%d, write_pos: %d)\n", bb->size, bb->read_pos, bb->write_pos);
 
 	return size;
 }
@@ -211,5 +215,5 @@ int buffer_size(buf_base_t buf)
 
 	bb = buf;
 
-	return bb->size;
+	return (bb->write_pos - bb->read_pos);
 }

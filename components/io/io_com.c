@@ -39,7 +39,7 @@ static int com_init(object_t parent, HMOD hmod, const char *settings)
 	io = (object_io_t)parent;
 	io->settings = strdup(settings);
 	io->hmod = hmod;
-	io->mode = uart;
+	io->mode = mode_uart;
 
 	debug(DEBUG, "settings: %s\n", io->settings);
 

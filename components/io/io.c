@@ -96,8 +96,8 @@ int io_recv(object_t parent)
 
 int io_send(object_t parent)
 {
-	int txnum, size;
-	char sendbuf[BUFFER_MAX];
+	int txnum, size, bufsize;
+	char sendbuf[BUFFER_SIZE];
 	object_io_t io;
 
 	io = (object_io_t)parent;
@@ -105,10 +105,10 @@ int io_send(object_t parent)
 	size = buffer_size(&io->buffer->write_buf); 
 	if(size > 0)
 	{
-		memset(sendbuf, 0, sizeof(char) * BUFFER_MAX);
-		size = buffer_read(&io->buffer->write_buf, sendbuf, size);
+		memset(sendbuf, 0, BUFFER_SIZE);
+		bufsize = buffer_read(&io->buffer->write_buf, sendbuf, BUFFER_SIZE);
 
-		txnum = write(io->fd, sendbuf, size);
+		txnum = write(io->fd, sendbuf, bufsize);
 		if(txnum == -1 || txnum == 0)
 			return -1;
 		else if(txnum > 0)

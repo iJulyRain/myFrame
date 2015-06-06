@@ -18,8 +18,12 @@
 #ifndef __OBJECT_H__
 #define __OBJECT_H__
 
+#include "def.h"
 #include "list.h"
 #include "config.h"
+
+#include <string.h>
+#include <pthread.h>
 
 /**
  * @brief 对象基类
@@ -64,6 +68,16 @@ void object_container_addend(object_t object, struct object_information *contain
 void object_addend(object_t object, const char *name, int type);
 void object_container_delete(object_t object, struct object_information *container);
 void object_delete(object_t object);
+
+#define CONTAINER_FOREACH(container, T, pt)	\
+	list_t *node;\
+	for(node = container->list.next; \
+		node != &container->list; \
+		node = node->next)	\
+	{	\
+		pt = (T)list_entry(node, struct object, list);
+
+#define CONTAINER_FOREACH_END	}
 
 #define OBJECT_FOREACH(type, T, pt) \
 	list_t *node;\

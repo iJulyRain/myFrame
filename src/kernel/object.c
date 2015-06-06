@@ -15,7 +15,7 @@
  *
  * =====================================================================================
  */
-#include "common.h"
+#include "object.h"
 
 extern struct object_information object_container[object_class_type_unknown];
 

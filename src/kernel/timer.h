@@ -22,7 +22,17 @@
 #include <sys/timefd.h>
 #endif
 
-#include "def.h"
+#include "object.h"
+#include "message.h"
+#include "print.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+#include <signal.h>
+#include <semaphore.h>
+#include <sys/time.h>
 
 #define TIMER_STOP		0
 #define TIMER_START		1

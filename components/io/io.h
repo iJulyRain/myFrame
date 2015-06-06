@@ -1,31 +1,32 @@
 #ifndef __AIO_H__
 #define __AIO_H__
 
-#include <string.h>
+#include "object.h"
+#include "message.h"
+#include "poller.h"
+#include "print.h"
+#include "config.h"
+
+#include "buffer.h"
+
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
+#include <errno.h>
 #include <unistd.h>
 
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
 #include <fcntl.h>
-
-#include "def.h"
-#include "object.h"
-#include "buffer.h"
-#include "print.h"
-#include "errno.h"
-#include "poller.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <arpa/inet.h>
 
 enum mode
 {
-	tcp_client = 0,
-	tcp_server,
-	udp_client,
-	udp_server,
-	uart
+	mode_tcp_client = 1,
+	mode_tcp_server,
+	mode_udp_client,
+	mode_udp_server,
+	mode_uart
 };
 
 /**

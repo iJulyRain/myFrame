@@ -15,9 +15,11 @@
  *
  * =====================================================================================
  */
-#include "common.h"
+#include "timer.h"
 
 static sem_t block;
+
+extern struct object_information object_container[object_class_type_unknown];
 
 /**
 * @brief 定时器-添加定时器 

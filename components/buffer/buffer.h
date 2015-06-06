@@ -1,14 +1,12 @@
 #ifndef __BUFFER_H__
 #define __BUFFER_H__
 
-#include <assert.h>
-#include <string.h>
-#include <stddef.h>
-#include <stdlib.h>
-
-#include "def.h"
-#include "print.h"
 #include "object.h"
+#include "print.h"
+
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
 
 typedef struct buf_base
 {
@@ -28,8 +26,9 @@ typedef struct object_buf
 
 	struct buf_base read_buf;
 	struct buf_base write_buf;
-}*object_buf_t;	
+}*object_buf_t;
 
+////////////////////////////////////////////////////////////////////
 object_buf_t buffer_create(void);
 int buffer_add(buf_base_t buf, const char *buffer, size_t size);
 int buffer_remove(buf_base_t buf, char *buffer, size_t size);

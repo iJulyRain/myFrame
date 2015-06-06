@@ -34,7 +34,7 @@ static int tcp_init(object_t parent, HMOD hmod, const char *settings)
 	io = (object_io_t)parent;
 	io->settings = strdup(settings);
 	io->hmod = hmod;
-	io->mode = tcp_client;
+	io->mode = mode_tcp_client;
 
 	debug(DEBUG, "settings: %s\n", io->settings);
 

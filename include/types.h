@@ -72,6 +72,13 @@ typedef UINT            WPARAM;
 typedef DWORD           LPARAM;
 
 /**
+* @brief 线程模块句柄
+*/
+typedef UINT HMOD;
+
+
+
+/**
  * \def LOBYTE(w)
  * \brief Returns the low byte of the word \a w.
  *

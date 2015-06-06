@@ -15,7 +15,9 @@
  *
  * =====================================================================================
  */
-#include "common.h"
+#include "init.h"
+
+extern struct object_information object_container[object_class_type_unknown];
 
 /**
  * @brief 设置打印级别

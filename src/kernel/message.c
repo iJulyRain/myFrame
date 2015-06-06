@@ -16,6 +16,7 @@
  * =====================================================================================
  */
 #include "message.h"
+#include "thread.h"
 
 /**
 * @brief 查找线程对象
@@ -75,7 +76,7 @@ int post_message(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 	if(p == NULL)
 		return -1;
 
-	pthread_mutex_lock(&p->msgqueue.lock);
+	ENTER_LOCK(&p->msgqueue.lock);
 
 	if((p->msgqueue.write_pos + 1) % 16 == p->msgqueue.read_pos)	//已经写满了
 	{
@@ -96,7 +97,7 @@ int post_message(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 	p->msgqueue.dw_data |= QS_POSTMSG;
 
 err:
-	pthread_mutex_unlock(&p->msgqueue.lock);
+	EXIT_LOCK(&p->msgqueue.lock);
 
 	sem_getvalue(&p->msgqueue.wait, &sem_value);
 	if(sem_value == 0)	///<如果有线程在等待

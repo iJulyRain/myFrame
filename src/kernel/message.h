@@ -19,6 +19,11 @@
 #define __MESSAGE_H__
 
 #include "def.h"
+#include "types.h"
+#include "object.h"
+
+#include <pthread.h>
+#include <semaphore.h>
 
 /*
  * brief Ready to initialize modules
@@ -54,15 +59,39 @@
  */
 #define QS_POSTMSG 		0x40000000
 
+/**
+* @brief 线程间消息结构
+*/
+typedef struct msg
+{
+	HMOD hmod;
+
+	int message;
+
+	WPARAM wparam;
+	LPARAM lparam;
+}*msg_t;
+
+/**
+* @brief 消息队列（环形）
+*/
+typedef struct msgqueue
+{
+	DWORD dw_data;
+
+	int read_pos;
+	int write_pos;
+
+	sem_t wait;
+	pthread_mutex_t lock;
+	struct msg msg[MSGQUEUE_MAX];
+}*msgqueue_t;
+
 ////////////////////////////////////////////////////////////////////////
 HMOD find_thread(const char *name);
-
 int send_message(HMOD hmod, int message, WPARAM wparam, LPARAM lparam);
-
 int post_message(HMOD hmod, int message, WPARAM wparam, LPARAM lparam);
-
 int get_message(HMOD hmod, msg_t pmsg);
-
 int dispatch_message(msg_t pmsg);
 
 #endif

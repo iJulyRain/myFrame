@@ -16,7 +16,6 @@
  * =====================================================================================
  */
 #include "common.h"
-
 #include "daemon.h"
 
 #define NAME "daemon"
@@ -44,37 +43,14 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			///<新建一个tcp client
 			object_io_t tcp_client = new_object_io("io tcp", "tcp client");
 			assert(tcp_client);
-			tcp_client->_info();
-			tcp_client->_init(&tcp_client->parent, hmod, "192.168.1.138:40001");
-			object_container_addend(&tcp_client->parent, &this->io_container);	///<填充到线程的IO容器里面
 
-			///<用于定时重连
-			timer_add(hmod, 1, 1 * TICK_PER_SECOND);
-			timer_start(hmod, 1);
+			tcp_client->_info();
+			tcp_client->_init(&tcp_client->parent, hmod, "192.168.199.203:40001");
+			object_container_addend(&tcp_client->parent, &this->io_container);	///<填充到线程的IO容器里面
 		}
 			break;
 		case MSG_TIMER:
 		{
-			int id = (int)wparam;
-
-			debug(DEBUG, "MSG TIMER %d\n", id);
-
-			object_thread_t this = (object_thread_t)hmod;
-			if(id == 1)	///<connect
-			{
-				object_io_t tcp_client;
-
-				tcp_client = (object_io_t)object_container_find("tcp client", &this->io_container);
-				if(tcp_client->_connect(&tcp_client->parent) == ONLINE)
-				{
-					timer_stop(hmod, id);	///<连接成功，关闭定时器
-
-					poller_event_setfd(tcp_client->event, tcp_client->_getfd(&tcp_client->parent));
-					poller_add(0,  tcp_client->event);
-				}
-				else
-					tcp_client->_close(&tcp_client->parent);
-			}
 		}
 			break;
 		case MSG_COMMAND:
@@ -104,28 +80,9 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			debug(DEBUG, "==> write complete!\n");
 		}
 			break;
-		case MSG_AIOERR:
-		{
-			debug(DEBUG, "==> MSG AIOERR!\n");
-		}
-		case MSG_AIOBREAK:
-		{
-			debug(DEBUG, "==> MSG AIOBREAK!\n");
-
-			object_thread_t this = (object_thread_t)hmod;
-			object_io_t tcp_client = (object_io_t)object_container_find("tcp client", &this->io_container);
-
-			poller_del(0,  tcp_client->event);
-			tcp_client->_close(&tcp_client->parent);
-
-			timer_start(hmod, 1);
-		}
-			break;
-
-		break;
 	}
 
-	return 0;
+	return thread_default_process(hmod, message, wparam, lparam);
 }
 
 /**

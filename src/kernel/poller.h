@@ -1,12 +1,11 @@
 #ifndef __POLLER_H__
 #define __POLLER_H__
 
+#include "def.h"
+
+#include <string.h>
 #include <stdlib.h>
 #include <poll.h>
-#include <string.h>
-
-#include "def.h"
-#include "print.h"
 
 typedef struct poller_event
 {
