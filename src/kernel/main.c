@@ -23,13 +23,13 @@ int main(int argc, char **argv)
 
 	fprintf(stdout, "version: %s build: %s %s @%s\n", VERSION, __DATE__, __TIME__, who(WHO));
 
-	if((step = init()) != 0)
+	if((step = init(argc, argv)) != 0)
 	{
 		debug(RELEASE, "system initialize failed ont step: %d!\n", abs(step));
 		return -1;
 	}
 
-	idle();	///<轮询
+	loop();	///<轮询
 	
 	return 0;
 }

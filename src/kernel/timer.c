@@ -271,10 +271,7 @@ void *thread_timer_entry(void *parameter)
 
 		ENTER_LOCK(&object_container[object_class_type_timer].lock);
 
-		for(pt = (object_timer_t)object_iter(object_class_type_timer, NULL); 
-			pt != NULL; 
-			pt = (object_timer_t)object_iter(object_class_type_timer, (object_t)pt))
-		{
+		OBJECT_FOREACH(object_class_type_timer, object_timer_t, pt)
 			if(pt->run == TIMER_STOP)
 				continue;
 
@@ -288,7 +285,7 @@ void *thread_timer_entry(void *parameter)
 			post_message(pt->hmod, MSG_TIMER, pt->id, 0);
 
 			pt->timeout_tick = 0;
-		}
+		OBJECT_FOREACH_END
 
 		EXIT_LOCK(&object_container[object_class_type_timer].lock);
 

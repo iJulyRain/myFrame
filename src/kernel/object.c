@@ -17,6 +17,8 @@
  */
 #include "common.h"
 
+extern struct object_information object_container[object_class_type_unknown];
+
 /**
 * @brief 初始化对象容器
 */
@@ -36,37 +38,28 @@ void object_container_init(void)
 	}
 }
 
-/**
-* @brief 对象迭代器
-*
-* 这个函数不是安全的，当有其他线程操作对量链表时
-* 有可能造成不可预知的后果
-*
-* @param type 对象类型，索引对象容器
-* @param po 当前对象位置
-*
-* @return 遍历完返回NULL，否则返回下一个对象指针 
-*/
-object_t object_iter(int type, object_t po)
+object_t object_container_find(const char *name, struct object_information *container)
 {
+    int find_obj = 0;
 	list_t *node;
-	object_t p;
-	struct object_information *information;
+	object_t p = NULL;
 
-	if(type < 0 || type > object_class_type_unknown)
-		return NULL;
+	ENTER_LOCK(&container->lock);
 
-	information = &object_container[type];
-	
-	if(po == NULL)
-		node = information->list.next;
-	else
-		node = po->list.next;
+	for(node = container->list.next; node != &container->list; node = node->next)
+	{
+		p = list_entry(node, struct object, list);
+		if(!strcmp(p->name, name))
+        {
+            find_obj = 1;
+            break;
+        }
+	}
 
-	if(node == &information->list)
-		return NULL;
+	EXIT_LOCK(&container->lock);
 
-	p = list_entry(node, struct object, list);
+    if(find_obj == 0)
+        return NULL;
 
 	return p;
 }
@@ -81,9 +74,6 @@ object_t object_iter(int type, object_t po)
 */
 object_t object_find(const char *name, int type)
 {
-    int find_obj = 0;
-	list_t *node;
-	object_t p = NULL;
 	struct object_information *information;
 
 	if(type < 0 || type > object_class_type_unknown)
@@ -91,24 +81,22 @@ object_t object_find(const char *name, int type)
 
 	information = &object_container[type];
 
-	ENTER_LOCK(&object_container[type].lock);
+	return object_container_find(name, information);
+}
 
-	for(node = information->list.next; node != &information->list; node = node->next)
-	{
-		p = list_entry(node, struct object, list);
-		if(!strcmp(p->name, name))
-        {
-            find_obj = 1;
-            break;
-        }
-	}
+void object_container_addend(object_t object, struct object_information *container)
+{
+	list_t *list;
 
-	EXIT_LOCK(&object_container[type].lock);
+	list = &container->list;
 
-    if(find_obj == 0)
-        return NULL;
+	ENTER_LOCK(&container->lock);
 
-	return p;
+	list_insert_before(list, &object->list);
+
+	EXIT_LOCK(&container->lock);
+
+	container->size ++;
 }
 
 /**
@@ -120,23 +108,26 @@ object_t object_find(const char *name, int type)
 */
 void object_addend(object_t object, const char *name, int type)
 {
-	list_t *list;
+	struct object_information *container;
 
 	if(type < 0 || type > object_class_type_unknown)
 		return;
 	
 	strncpy(object->name, name, OBJ_NAME_MAX);
 	object->type = type;
-	
-	list = &object_container[type].list;
 
-	ENTER_LOCK(&object_container[type].lock);
+	container = object_container + type;
 
-	list_insert_before(list, &object->list);
+	object_container_addend(object, container);
+}
 
-	EXIT_LOCK(&object_container[type].lock);
+void object_container_delete(object_t object, struct object_information *container)
+{
+	ENTER_LOCK(&container->lock);
 
-	object_container[type].size ++;
+	list_remove(&object->list);
+
+	EXIT_LOCK(&container->lock);
 }
 
 /**
@@ -146,9 +137,9 @@ void object_addend(object_t object, const char *name, int type)
 */
 void object_delete(object_t object)
 {
-	ENTER_LOCK(&object_container[object->type].lock);
+	struct object_information *container;
 
-	list_remove(&object->list);
+	container = object_container + object->type; 
 
-	EXIT_LOCK(&object_container[object->type].lock);
+	object_container_delete(object, container);
 }

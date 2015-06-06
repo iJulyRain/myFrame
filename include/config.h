@@ -18,5 +18,13 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
+#define OBJ_NAME_MAX	32
+
+#define MSGQUEUE_MAX	16
+
+#define POLLER_MAX		20
+
+#define BUFFER_SIZE		512	///<buffer初始长度/每次增加的长度
+#define BUFFER_MAX		2 * 1024
 
 #endif //__CONFIG_H__ 

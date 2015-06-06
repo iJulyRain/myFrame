@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  init.c
+ *       Filename:  daemon.h
  *
- *    Description:  app init
+ *    Description:  daemon 
  *
  *        Version:  1.0
- *        Created:  06/02/2015 11:33:47 PM
+ *        Created:  06/02/2015 11:34:42 PM
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -15,11 +15,9 @@
  *
  * =====================================================================================
  */
-#include "common.h"
+#ifndef __DAEMON_H__
+#define __DAEMON_H__
 
-#include "daemon.h"	///<包含应用程序的头文件
+int register_thread_daemon(void);
 
-void app_init(int argc, char **argv)
-{
-	register_thread_daemon();
-}
+#endif

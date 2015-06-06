@@ -43,49 +43,25 @@
 #include <sys/shm.h>
 #include <arpa/inet.h>
 
+///<公告头文件
 #include "def.h"
-#include "list.h"
-#include "object.h"
 #include "print.h"
-#include "types.h"
-#include "message.h"
-#include "timer.h"
-#include "config.h"
-
 #include "version.h"
 #include "who.h"
 
+///<功能组件
+#include "timer.h"
+#include "message.h"
+#include "poller.h"
 #include "io.h"
-
-#include "sem.h"
-#include "tools.h"
-#include "ipc.h"
-#include "serial_port.h"
-
-#include <sqlite3.h>
-
-struct uart_setting
-{
-	int which;
-
-	int baud;
-	int databit;
-	int stopbit; 
-	int parity;
-};
-
-struct net_setting
-{
-	char ip[16];
-	int port;
-};
-
 
 struct object_information object_container[object_class_type_unknown];
 
 ////////////////////////////////////////////////////////////////////////
-int init(void);
-void idle(void);
+int init(int argc, char **argv);
+void app_init(int argc, char **argv);
+
+void loop(void);
 
 int register_thread_daemon(void);
 

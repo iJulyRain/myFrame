@@ -40,6 +40,4 @@ int list_isempty(const list_t *l);
 #define list_entry(node, type, member) \
     ((type *)((char *)(node) - (unsigned long)(&((type *)0)->member)))
 
-
-
 #endif

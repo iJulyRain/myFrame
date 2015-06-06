@@ -18,6 +18,8 @@
 #ifndef __MESSAGE_H__
 #define __MESSAGE_H__
 
+#include "def.h"
+
 /*
  * brief Ready to initialize modules
  */
@@ -37,15 +39,30 @@
  */
 #define MSG_COMMAND		0x0003
 
+#define MSG_AIOIN		0x0004
+
+#define MSG_AIOOUT		0x0005
+
+#define MSG_AIOERR		0x0006
+
+#define MSG_AIOCONN		0x0007
+
+#define MSG_AIOBREAK	0x0008
+
 /*
  * brief Indicates a message has post
  */
 #define QS_POSTMSG 		0x40000000
 
+////////////////////////////////////////////////////////////////////////
 HMOD find_thread(const char *name);
+
 int send_message(HMOD hmod, int message, WPARAM wparam, LPARAM lparam);
+
 int post_message(HMOD hmod, int message, WPARAM wparam, LPARAM lparam);
+
 int get_message(HMOD hmod, msg_t pmsg);
+
 int dispatch_message(msg_t pmsg);
 
 #endif

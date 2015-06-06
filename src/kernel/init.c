@@ -22,16 +22,7 @@
  */
 static void init_print_level(void)
 {
-	char *p = NULL;
-
-	p = getenv("PRINT_LEVEL");
-	if(p == NULL)
-		p = "release";
-
-	if(!strcmp(p, "debug"))
-		set_print_level(0);
-	else
-		set_print_level(1);
+	log_init();
 }
 
 /**
@@ -74,25 +65,8 @@ static void install_sighandler(void)
  */
 static void register_class(void)
 {
-	object_t o;
-	object_thread_t ot;
-
-	///<注册处理函数集
-	register_tcp_io_operations();
-	register_udp_io_operations();
-	register_uart_io_operations();
-	
-	///<注册线程对象
-	register_thread_daemon();
-	
-	///<初始化线程对象
-	for(o = object_iter(object_class_type_thread, NULL); 
-		o != NULL;
-		o = object_iter(object_class_type_thread, o))
-	{
-		ot = (object_thread_t)o;
-		send_message((HMOD)ot, MSG_INIT, 0, 0);
-	}
+	///<注册系统组件
+	register_all_io();
 }
 
 /**
@@ -105,37 +79,30 @@ static int system_threads(void)
 	int ret;
 	sem_t wait;
 	pthread_t tid;
-	object_t o;
 	object_thread_t ot;
 
-	sem_init(&wait, 0, 0);
-
 	///<启动定时器线程
+	sem_init(&wait, 0, 0);
 	ret = pthread_create(&tid, NULL, thread_timer_entry, &wait);
 	if(ret != 0)
 	{
 		debug(RELEASE, "==> create thread 'timer' error[%d]!\n", ret);
 		return -1;
 	}
-
 	sem_wait(&wait);	///<待定时器线程启动完毕后再启动其它线程
 	sem_destroy(&wait);
 
 	///<启动应用线程
-	for(o = object_iter(object_class_type_thread, NULL); 
-		o != NULL;
-		o = object_iter(object_class_type_thread, o))
-	{
-		ot = (object_thread_t)o;
-
-		debug(DEBUG, "==> start thread '%s'\n", o->name);
+	OBJECT_FOREACH(object_class_type_thread, object_thread_t, ot)
+		debug(DEBUG, "==> start thread '%s'\n", ((object_t)ot)->name);
+		send_message((HMOD)ot, MSG_INIT, 0, 0);
 		ret = pthread_create(&ot->tid, NULL, ot->entry, ot);
 		if(ret != 0)
 		{
-			debug(RELEASE, "==> create thread '%s' error[%d]!\n", o->name, ret);
+			debug(RELEASE, "==> create thread '%s' error[%d]!\n", ((object_t)ot)->name, ret);
 			return -1;
 		}
-	}
+	OBJECT_FOREACH_END
 
 	return 0;
 }
@@ -145,7 +112,7 @@ static int system_threads(void)
  *
  * @return 成功返回0，失败返回失败的步骤
  */
-int init(void)
+int init(int argc, char **argv)
 {
 	init_print_level();	///< console 消息级别
 
@@ -153,6 +120,10 @@ int init(void)
 
 	install_sighandler();	///<安装信号处理函数
 	register_class();
+	
+	poller_create(POLLER_MAX);
+
+	app_init(argc, argv);
 
 	if(system_threads() < 0)
 		return -2;

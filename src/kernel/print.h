@@ -18,34 +18,24 @@
 #ifndef __PRINT_H__
 #define __PRINT_H__
 
-#include <stdio.h>
-#include <string.h>
-#include <stdarg.h>
-
-#include <pthread.h>
-#include <time.h>
+#include <zlog.h>
 
 //print level
-
 #define DEBUG 0	///<print level debug
 #define RELEASE 1 ///<print level release
 
 /**
-* @brief set print level to process
-*
-* @param plevel print level
+* @brief logger initialize 
+* 0 success, 01 failed
 */
-void set_print_level(int plevel);
+int log_init(void);
 
-/**
-* @brief output information 
-*
-* @param plevel print level which set by user
-* @param format format  
-* @param ... ...
-*
-* @return always 0 
-*/
-int debug(int level, const char *format, ...); 
+#define debug(level, format, arg...)	\
+	{	\
+		if(level == DEBUG) \
+			dzlog_debug(format, ##arg);\
+		else if(level == RELEASE)\
+			dzlog_info(format, ##arg);\
+	}
 
 #endif

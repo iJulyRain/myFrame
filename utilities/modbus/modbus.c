@@ -32,6 +32,8 @@
 #include "modbus.h"
 #include "modbus-private.h"
 
+#define _GNU_SOURCE
+
 /* Internal use */
 #define MSG_LENGTH_UNDEFINED -1
 
