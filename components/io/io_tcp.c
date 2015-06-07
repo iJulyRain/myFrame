@@ -61,8 +61,8 @@ static int tcp_connect(object_t parent)
 	object_io_t io;
 	struct sockaddr_in *addr;
 	int rc, conn;
-	int e;
-	socklen_t elen;
+	fd_set fdr, fdw;
+	struct timeval tv;
 
 	io = (object_io_t)parent;
 	addr = io->addr;
@@ -76,33 +76,41 @@ static int tcp_connect(object_t parent)
 		conn = connect(io->fd, (struct sockaddr *)io->addr, sizeof(struct sockaddr_in));
 		if(conn == -1)
 		{
-			if(errno == EINPROGRESS)	///<说明还在继续
+			if(errno == EINPROGRESS || errno == EINTR)
 				io->isconnect = CONNECTING;
 			else
 				io->isconnect = OFFLINE;	///<出错
 		}
 		else if(conn == 0)
+		{
 			io->isconnect = ONLINE;
+			debug(DEBUG, "==> 1 connect to '%s' success!\n", io->settings);
+		}
 	}
 	else if(io->isconnect == CONNECTING)
 	{
-		elen = sizeof(e);
-		rc = getsockopt(io->fd, SOL_SOCKET, SO_ERROR, (void *)&e, &elen);
-		if(rc < 0)
+		FD_ZERO(&fdr);
+		FD_ZERO(&fdw);
+
+		FD_SET(io->fd, &fdr);
+		FD_SET(io->fd, &fdw);
+
+		tv.tv_sec = 0;
+		tv.tv_usec = 0;
+
+		rc = select(io->fd + 1, &fdr, &fdw, NULL, &tv);
+		if(rc <= 0)
+			io->isconnect = CONNECTING;
+		else if(rc == 2)
 			io->isconnect = OFFLINE;
-
-		if(e)
+		else if(rc == 1)
 		{
-			if(e == EWOULDBLOCK 
-			|| e == EINPROGRESS
-			|| e == EINTR
-			|| e == EINVAL)	///<还没连上
-				io->isconnect = CONNECTING;
-			else
-				io->isconnect = OFFLINE;
+			if(FD_ISSET(io->fd, &fdw));
+			{
+				io->isconnect = ONLINE;
+				debug(DEBUG, "==> 2 connect to '%s' success!\n", io->settings);
+			}
 		}
-
-		io->isconnect = ONLINE;
 	}
 
 	return io->isconnect;

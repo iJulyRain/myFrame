@@ -42,7 +42,8 @@ int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 				container = &this->io_container;
 
 				CONTAINER_FOREACH(container, object_io_t, tcp_client)
-					if(tcp_client->mode == mode_tcp_client && (tcp_client->_state(&tcp_client->parent) != ONLINE))
+					if(tcp_client->mode == mode_tcp_client 
+					&& tcp_client->_state(&tcp_client->parent) != ONLINE)
 					{
 						tcp_client->_connect(&tcp_client->parent);
 						if(tcp_client->_state(&tcp_client->parent) == ONLINE)

@@ -18,26 +18,28 @@
 #ifndef __TIMER_H__
 #define __TIMER_H__
 
-#ifdef USING_TIMERFD
-#include <sys/timefd.h>
-#endif
-
 #include "object.h"
 #include "message.h"
 #include "print.h"
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <assert.h>
+#include <poll.h>
 #include <signal.h>
 #include <semaphore.h>
 #include <sys/time.h>
 
+#ifdef USING_TIMERFD
+#include <sys/timerfd.h>
+#endif
+
 #define TIMER_STOP		0
 #define TIMER_START		1
 
-#define TICK_PER_SECOND 10
+#define TICK_PER_SECOND 100
 
 /**
 * @brief 定时器回调函数类型

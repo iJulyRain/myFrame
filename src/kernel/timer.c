@@ -151,7 +151,7 @@ void timer_control(HMOD hmod, int id, int init_tick)
 */
 static unsigned long long __timer_counter = 0;
 
-#ifdef USING_TIMERFD
+#if defined(USING_TIMERFD)
 /**
 * @brief timerfd方式基础定时器
 *
@@ -171,7 +171,7 @@ static int init_timerfd_timer(void)
 
 	memset(&tv, 0, sizeof(struct itimerspec));
 	tv.it_value.tv_sec = 0;
-	tv.it_value.tv_nsec = 10000000;
+	tv.it_value.tv_nsec = 1000000000 / TICK_PER_SECOND;
 
 	tv.it_interval = tv.it_value;
 
@@ -179,7 +179,8 @@ static int init_timerfd_timer(void)
 
 	return tfd;
 }
-#elif USING_SELECT
+
+#elif defined(USING_SELECT)
 
 static void timer_tick(void)
 {
@@ -187,7 +188,7 @@ static void timer_tick(void)
 
 	memset(&tv, 0, sizeof(struct timeval));
 	tv.tv_sec = 0;
-	tv.tv_usec = 100000;
+	tv.tv_usec = 1000000 / TICK_PER_SECOND;
 
 	select (0, NULL, NULL, NULL, &tv);
 }
@@ -223,7 +224,7 @@ static int init_sigalrm_timer(void)
 	signal(SIGALRM, sigalrm_handler);
 
 	tv.it_value.tv_sec = 0;
-	tv.it_value.tv_usec = 100000;	//100ms
+	tv.it_value.tv_usec = 1000000 / TICK_PER_SECOND;	//100ms
 	tv.it_interval = tv.it_value;
 
 	ret = setitimer(ITIMER_REAL, &tv, NULL);
@@ -251,7 +252,7 @@ void *thread_timer_entry(void *parameter)
 	object_timer_t pt;
 	sem_t *wait = (sem_t *)parameter;
 
-#ifdef USING_TIMERFD
+#if defined(USING_TIMERFD)
 	int ret;
 	long long tick;
 	struct pollfd fds[1];
@@ -264,7 +265,7 @@ void *thread_timer_entry(void *parameter)
 	memset(fds, 0, sizeof(struct pollfd));
 	fds[0].fd = tfd;
 	fds[0].events = POLLIN;
-#elif USING_SELECT
+#elif defined(USING_SELECT)
 	;
 #else
 	init_sigalrm_timer();
@@ -274,14 +275,14 @@ void *thread_timer_entry(void *parameter)
 
 	for(;;)
 	{
-	#ifdef USING_TIMERFD
-		ret = poll(fds, 1, 10);
+	#if defined(USING_TIMERFD)
+		ret = poll(fds, 1, 0);
 		if(ret <= 0)
 			continue;
 
 		read(fds[0].fd, &tick, sizeof(long long));
 		__timer_counter += tick;;
-	#elif USING_SELECT
+	#elif defined(USING_SELECT)
 		timer_tick();
 		__timer_counter ++;;
 	#else
