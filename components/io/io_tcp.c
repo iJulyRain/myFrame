@@ -61,43 +61,49 @@ static int tcp_connect(object_t parent)
 	object_io_t io;
 	struct sockaddr_in *addr;
 	int rc, conn;
-	fd_set fdr, fdw;
-	struct timeval tv;
+	int e;
+	socklen_t elen;
 
 	io = (object_io_t)parent;
 	addr = io->addr;
 
-	io->fd = socket(AF_INET, SOCK_STREAM, 0);
-	assert(io->fd > 0);
-	fcntl(io->fd, F_SETFL, fcntl(io->fd, F_GETFL) | O_NONBLOCK);
-
-	conn = connect(io->fd, (struct sockaddr *)io->addr, sizeof(struct sockaddr_in));
-	if(conn == -1)
+	if(io->isconnect == OFFLINE)
 	{
-		if(errno == EINPROGRESS)	///<说明还在继续
+		io->fd = socket(AF_INET, SOCK_STREAM, 0);
+		assert(io->fd > 0);
+		fcntl(io->fd, F_SETFL, fcntl(io->fd, F_GETFL) | O_NONBLOCK);
+
+		conn = connect(io->fd, (struct sockaddr *)io->addr, sizeof(struct sockaddr_in));
+		if(conn == -1)
 		{
-			FD_ZERO(&fdr);
-			FD_ZERO(&fdw);
-			FD_SET(io->fd, &fdr);
-			FD_SET(io->fd, &fdw);
-
-			tv.tv_sec = 1;	///<链接超时1秒
-			tv.tv_usec = 0;
-
-			rc = select(io->fd + 1, &fdr, &fdw, NULL, &tv);
-			if(rc < 0 || rc == 0 || rc == 2)	///<出错
-				io->isconnect = OFFLINE;
-			else if(rc == 1)
-			{
-				if(FD_ISSET(io->fd, &fdw));	///<描述符可写，表示已经连接上
-					io->isconnect = ONLINE;
-			}
+			if(errno == EINPROGRESS)	///<说明还在继续
+				io->isconnect = CONNECTING;
+			else
+				io->isconnect = OFFLINE;	///<出错
 		}
-		else
-			io->isconnect = OFFLINE;
+		else if(conn == 0)
+			io->isconnect = ONLINE;
 	}
-	else if(conn == 0)
+	else if(io->isconnect == CONNECTING)
+	{
+		elen = sizeof(e);
+		rc = getsockopt(io->fd, SOL_SOCKET, SO_ERROR, (void *)&e, &elen);
+		if(rc < 0)
+			io->isconnect = OFFLINE;
+
+		if(e)
+		{
+			if(e == EWOULDBLOCK 
+			|| e == EINPROGRESS
+			|| e == EINTR
+			|| e == EINVAL)	///<还没连上
+				io->isconnect = CONNECTING;
+			else
+				io->isconnect = OFFLINE;
+		}
+
 		io->isconnect = ONLINE;
+	}
 
 	return io->isconnect;
 }

@@ -25,7 +25,7 @@ int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 		case MSG_INIT:
 		{
 			///<用于定时重连
-			timer_add(hmod, 0, 3 * TICK_PER_SECOND);
+			timer_add(hmod, 0, 1 * TICK_PER_SECOND);
 			timer_start(hmod, 0);
 		}
 			break;
@@ -42,14 +42,15 @@ int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 				container = &this->io_container;
 
 				CONTAINER_FOREACH(container, object_io_t, tcp_client)
-					if(tcp_client->mode == mode_tcp_client)
+					if(tcp_client->mode == mode_tcp_client && (tcp_client->_state(&tcp_client->parent) != ONLINE))
 					{
-						if(tcp_client->_connect(&tcp_client->parent) == ONLINE)
+						tcp_client->_connect(&tcp_client->parent);
+						if(tcp_client->_state(&tcp_client->parent) == ONLINE)
 						{
 							poller_event_setfd(tcp_client->event, tcp_client->_getfd(&tcp_client->parent));
 							poller_add(0,  tcp_client->event);
 						}
-						else
+						else if(tcp_client->_state(&tcp_client->parent) == OFFLINE)
 							tcp_client->_close(&tcp_client->parent);
 					}
 				CONTAINER_FOREACH_END

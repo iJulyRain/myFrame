@@ -40,17 +40,25 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
 			object_thread_t this = (object_thread_t)hmod;
 
+			object_io_t tcp_client;
 			///<新建一个tcp client
-			object_io_t tcp_client = new_object_io("io tcp", "tcp client");
+			tcp_client = new_object_io("io tcp", "tcp client1");
 			assert(tcp_client);
-
 			tcp_client->_info();
 			tcp_client->_init(&tcp_client->parent, hmod, "192.168.199.203:40001");
+			object_container_addend(&tcp_client->parent, &this->io_container);	///<填充到线程的IO容器里面
+
+			///<新建一个tcp client
+			tcp_client = new_object_io("io tcp", "tcp client2");
+			assert(tcp_client);
+			tcp_client->_info();
+			tcp_client->_init(&tcp_client->parent, hmod, "192.168.199.203:40002");
 			object_container_addend(&tcp_client->parent, &this->io_container);	///<填充到线程的IO容器里面
 		}
 			break;
 		case MSG_TIMER:
 		{
+			debug(DEBUG, "==> MSG TIMER\n");
 		}
 			break;
 		case MSG_COMMAND:
@@ -64,8 +72,8 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
 			int rxnum;
 			char buffer[BUFFER_SIZE];
-			object_thread_t this = (object_thread_t)hmod;
-			object_io_t tcp_client = (object_io_t)object_container_find("tcp client", &this->io_container);
+
+			object_io_t tcp_client = (object_io_t)lparam;
 
 			memset(buffer, 0, BUFFER_SIZE);
 

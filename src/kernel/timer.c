@@ -151,20 +151,6 @@ void timer_control(HMOD hmod, int id, int init_tick)
 */
 static unsigned long long __timer_counter = 0;
 
-/**
-* @brief SIGALRM信号处理函数
-*
-* @param s 信号
-*/
-static void sigalrm_handler(int s)
-{
-	int sem_value;
-	__timer_counter ++;
-
-	sem_getvalue(&block, &sem_value);
-	if(sem_value == 0)
-		sem_post(&block);
-}
 #ifdef USING_TIMERFD
 /**
 * @brief timerfd方式基础定时器
@@ -193,8 +179,34 @@ static int init_timerfd_timer(void)
 
 	return tfd;
 }
+#elif USING_SELECT
+
+static void timer_tick(void)
+{
+	struct timeval tv;
+
+	memset(&tv, 0, sizeof(struct timeval));
+	tv.tv_sec = 0;
+	tv.tv_usec = 100000;
+
+	select (0, NULL, NULL, NULL, &tv);
+}
 
 #else
+/**
+* @brief SIGALRM信号处理函数
+*
+* @param s 信号
+*/
+static void sigalrm_handler(int s)
+{
+	int sem_value;
+	__timer_counter ++;
+
+	sem_getvalue(&block, &sem_value);
+	if(sem_value == 0)
+		sem_post(&block);
+}
 
 /**
 * @brief 信号SIGALRM方式基础定时器
@@ -252,6 +264,8 @@ void *thread_timer_entry(void *parameter)
 	memset(fds, 0, sizeof(struct pollfd));
 	fds[0].fd = tfd;
 	fds[0].events = POLLIN;
+#elif USING_SELECT
+	;
 #else
 	init_sigalrm_timer();
 #endif
@@ -267,6 +281,9 @@ void *thread_timer_entry(void *parameter)
 
 		read(fds[0].fd, &tick, sizeof(long long));
 		__timer_counter += tick;;
+	#elif USING_SELECT
+		timer_tick();
+		__timer_counter ++;;
 	#else
 		sem_wait(&block);
 	#endif

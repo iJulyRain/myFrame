@@ -41,7 +41,7 @@ typedef struct object_io
 	HMOD hmod;
 
 	int fd;
-	int isconnect;
+	int isconnect;	///<0 OFFLINE 1 ONLINE 2CONNECTIONG
 	int mode;	///<模式
 
 	//配置信息(拷贝) 字符串型

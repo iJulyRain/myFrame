@@ -9,6 +9,8 @@ set(CMAKE_CXX_COMPILER g++)
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_C_FLAGS "-Wall -g")
+add_definitions(-DUSING_SELECT)
+
 
 include_directories(${PROJECT_SOURCE_DIR}/include
 					${PROJECT_SOURCE_DIR}/components/io
