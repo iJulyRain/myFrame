@@ -19,7 +19,7 @@
 
 static void udp_info(void)
 {
-	debug(RELEASE, "==> IO(udp) writen by li zhixian @2015.06.01 ^.^ <==\n");
+	debug(RELEASE, "==> AIO(udp) writen by li zhixian @2015.06.01 ^.^ <==\n");
 }
 
 static int udp_init(object_t parent, HMOD hmod, const char *settings)
@@ -64,10 +64,10 @@ static int udp_connect(object_t parent)
 	io = (object_io_t)parent;
 	addr = io->addr;
 
-	io->fd = socket(AF_INET, SOCK_STREAM, 0);
+	io->fd = socket(AF_INET, SOCK_DGRAM, 0);
 	assert(io->fd > 0);
 
-	io->isconnect = connect(io->fd, (struct sockaddr *)io->addr, sizeof(struct sockaddr_in)) == 0 ? 1 : 0;
+	io->isconnect = (connect(io->fd, (struct sockaddr *)io->addr, sizeof(struct sockaddr_in)) == 0) ? ONLINE : OFFLINE;
 
 	return io->isconnect;
 }
@@ -85,6 +85,16 @@ static int udp_state(object_t parent)
 static void udp_close(object_t parent)
 {
 	io_close(parent);
+}
+
+static int udp_output(object_t parent, const char *buffer, int size)
+{
+	return io_output(parent, buffer, size); 
+}
+
+static int udp_input(object_t parent, char *buffer, int size, int clear)
+{
+	return io_input(parent, buffer, size, clear); 
 }
 
 static int udp_recv(object_t parent)
@@ -105,6 +115,8 @@ static struct object_io io=
 	._getfd		= 	udp_getfd,
 	._state 	= 	udp_state,
 	._close 	= 	udp_close,
+	._input		=	udp_input,
+	._output	= 	udp_output,
 	._recv 		= 	udp_recv,
 	._send 		= 	udp_send
 };

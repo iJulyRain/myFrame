@@ -93,6 +93,16 @@ static void com_close(object_t parent)
 	io_close(parent);
 }
 
+static int com_output(object_t parent, const char *buffer, int size)
+{
+	return io_output(parent, buffer, size); 
+}
+
+static int com_input(object_t parent, char *buffer, int size, int clear)
+{
+	return io_input(parent, buffer, size, clear); 
+}
+
 static int com_recv(object_t parent)
 {
 	return io_recv(parent);
@@ -111,6 +121,8 @@ static struct object_io io=
 	._getfd		=	com_getfd,
 	._state 	= 	com_state,
 	._close 	= 	com_close,
+	._input		=	com_input,
+	._output	= 	com_output,
 	._recv 		= 	com_recv,
 	._send 		= 	com_send
 };

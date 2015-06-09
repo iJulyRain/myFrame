@@ -63,6 +63,8 @@ static int tcp_connect(object_t parent)
 	int rc, conn;
 	fd_set fdr, fdw;
 	struct timeval tv;
+	int e;
+	socklen_t elen;
 
 	io = (object_io_t)parent;
 	addr = io->addr;
@@ -95,17 +97,20 @@ static int tcp_connect(object_t parent)
 		FD_SET(io->fd, &fdr);
 		FD_SET(io->fd, &fdw);
 
-		tv.tv_sec = 0;
+		tv.tv_sec = 1;
 		tv.tv_usec = 0;
 
 		rc = select(io->fd + 1, &fdr, &fdw, NULL, &tv);
 		if(rc <= 0)
-			io->isconnect = CONNECTING;
-		else if(rc == 2)
 			io->isconnect = OFFLINE;
-		else if(rc == 1)
+
+		if(FD_ISSET(io->fd, &fdw))
 		{
-			if(FD_ISSET(io->fd, &fdw));
+			elen = sizeof(e);
+			rc = getsockopt(io->fd, SOL_SOCKET, SO_ERROR, &e, &elen);
+			if(rc < 0 || e)
+				io->isconnect = OFFLINE;
+			else
 			{
 				io->isconnect = ONLINE;
 				debug(DEBUG, "==> 2 connect to '%s' success!\n", io->settings);

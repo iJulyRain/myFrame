@@ -143,3 +143,13 @@ void object_delete(object_t object)
 
 	object_container_delete(object, container);
 }
+
+const char *object_name(object_t object)
+{
+	return object->name;
+}
+
+int object_type(object_t object)
+{
+	return object->type;
+}

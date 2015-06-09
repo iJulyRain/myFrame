@@ -100,7 +100,7 @@ int buffer_add(buf_base_t buf, const char *buffer, size_t size)
 			{
 				///<do nothing
 				rc = -1;
-				debug(RELEASE, "read buffer overflow!\n");
+				debug(RELEASE, "buffer overflow!\n");
 			}
 		}
 	}

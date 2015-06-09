@@ -40,30 +40,51 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
 			object_thread_t this = (object_thread_t)hmod;
 
-			object_io_t tcp_client;
-			///<新建一个tcp client
-			tcp_client = new_object_io("io tcp", "tcp client1");
-			assert(tcp_client);
-			tcp_client->_info();
-			tcp_client->_init(&tcp_client->parent, hmod, "192.168.199.203:40001");
-			object_container_addend(&tcp_client->parent, &this->io_container);	///<填充到线程的IO容器里面
+			object_io_t client;
 
 			///<新建一个tcp client
-			tcp_client = new_object_io("io tcp", "tcp client2");
-			assert(tcp_client);
-			tcp_client->_info();
-			tcp_client->_init(&tcp_client->parent, hmod, "192.168.199.203:40002");
-			object_container_addend(&tcp_client->parent, &this->io_container);	///<填充到线程的IO容器里面
+			client = new_object_io("io tcp", "tcp client");
+			assert(client);
+			client->_info();
+			client->_init(&client->parent, hmod, "192.168.1.138:40001");
+			object_container_addend(&client->parent, &this->io_container);	///<填充到线程的IO容器里面
+
+			///<新建一个tcp client
+			client = new_object_io("io udp", "udp client");
+			assert(client);
+			client->_info();
+			client->_init(&client->parent, hmod, "192.168.1.138:40002");
+			object_container_addend(&client->parent, &this->io_container);	///<填充到线程的IO容器里面
+			timer_add(hmod, 1, 1 * ONE_SECOND, client);
 		}
 			break;
 		case MSG_TIMER:
 		{
-			debug(DEBUG, "==> MSG TIMER\n");
+			int id = (int)wparam;
+
+			if(id == 1)
+			{
+				debug(DEBUG, "I WANNA THIS.\n");
+
+				object_io_t client = (object_io_t)lparam;
+
+				client->_output(&client->parent, "hehe da!\r\n", strlen("hehe da!\r\n"));
+			}
 		}
 			break;
 		case MSG_COMMAND:
 		{
 		
+		}
+			break;
+		case MSG_AIOCONN:
+		{
+			object_io_t client = (object_io_t)lparam;
+
+			debug(DEBUG, "==> '%s' connect to '%s' success!\n", object_name((object_t)client), client->settings);
+
+			if(!strcmp(object_name((object_t)client), "udp client"))
+				timer_start(hmod, 1);
 		}
 			break;
 		case MSG_AIOIN:
@@ -73,19 +94,35 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			int rxnum;
 			char buffer[BUFFER_SIZE];
 
-			object_io_t tcp_client = (object_io_t)lparam;
+			object_io_t client = (object_io_t)lparam;
 
 			memset(buffer, 0, BUFFER_SIZE);
 
-			rxnum = tcp_client->_input(&tcp_client->parent, buffer, BUFFER_SIZE, TRUE);
+			rxnum = client->_input(&client->parent, buffer, BUFFER_SIZE, TRUE);
 			debug(DEBUG, "==>recv(%d): %s\n", rxnum, buffer);
 
-			tcp_client->_output(&tcp_client->parent, buffer, rxnum);
+			client->_output(&client->parent, buffer, rxnum);
 		}
 			break;
 		case MSG_AIOOUT:
 		{
 			debug(DEBUG, "==> write complete!\n");
+		}
+			break;
+
+		case MSG_AIOERR:
+		{
+			debug(DEBUG, "==> MSG AIOERR!\n");
+		}
+			break;
+		case MSG_AIOBREAK:
+		{
+			debug(DEBUG, "==> MSG AIOBREAK!\n");
+
+			object_io_t client = (object_io_t)lparam;
+
+			debug(DEBUG, "==> '%s' connect to '%s' break!\n", object_name((object_t)client), client->settings);
+			timer_stop(hmod, 1);
 		}
 			break;
 	}

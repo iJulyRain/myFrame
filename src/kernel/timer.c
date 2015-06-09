@@ -28,7 +28,7 @@ extern struct object_information object_container[object_class_type_unknown];
 * @param id 定时器ID
 * @param init_tick 定时器初始计数
 */
-void timer_add(HMOD hmod, int id, int init_tick)
+void timer_add(HMOD hmod, int id, int init_tick, void *user_data)
 {
 	char name[OBJ_NAME_MAX];
 	object_timer_t pt = NULL;
@@ -40,6 +40,7 @@ void timer_add(HMOD hmod, int id, int init_tick)
 	pt->id = id;
 	pt->init_tick = init_tick;
 	pt->run = TIMER_STOP;
+	pt->user_data = user_data;
 
 	memset(name, 0, OBJ_NAME_MAX);
 	sprintf(name, "%08X:%02d", hmod, id);
@@ -302,7 +303,7 @@ void *thread_timer_entry(void *parameter)
 			if(pt->timeout_tick < pt->init_tick)
 				continue;
 
-			post_message(pt->hmod, MSG_TIMER, pt->id, 0);
+			post_message(pt->hmod, MSG_TIMER, (WPARAM)pt->id, (LPARAM)pt->user_data);
 
 			pt->timeout_tick = 0;
 		OBJECT_FOREACH_END
