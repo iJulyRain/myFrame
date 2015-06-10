@@ -125,3 +125,8 @@ void register_io_udp(void)
 {
 	object_addend(&io.parent, "io udp", object_class_type_io);
 }
+
+object_io_t new_object_io_udp(const char *alias)
+{
+	return new_object_io("io udp", alias);
+}

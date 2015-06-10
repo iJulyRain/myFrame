@@ -174,3 +174,8 @@ void register_io_tcp(void)
 {
 	object_addend(&io.parent, "io tcp", object_class_type_io);
 }
+
+object_io_t new_object_io_tcp(const char *alias)
+{
+	return new_object_io("io tcp", alias);
+}

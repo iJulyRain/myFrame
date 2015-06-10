@@ -131,3 +131,8 @@ void register_io_com(void)
 {
 	object_addend(&io.parent, "io com", object_class_type_io);
 }
+
+object_io_t new_object_io_com(const char *alias)
+{
+	return new_object_io("io com", alias);
+}

@@ -43,18 +43,19 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			object_io_t client;
 
 			///<新建一个tcp client
-			client = new_object_io("io tcp", "tcp client");
+			client = new_object_io_tcp("tcp client");
 			assert(client);
 			client->_info();
-			client->_init(&client->parent, hmod, "192.168.1.138:40001");
+			client->_init(&client->parent, hmod, "192.168.199.172:40001");
 			object_container_addend(&client->parent, &this->io_container);	///<填充到线程的IO容器里面
 
-			///<新建一个tcp client
-			client = new_object_io("io udp", "udp client");
+			///<新建一个udp client
+			client = new_object_io_udp("udp client");
 			assert(client);
 			client->_info();
-			client->_init(&client->parent, hmod, "192.168.1.138:40002");
+			client->_init(&client->parent, hmod, "192.168.199.172:40002");
 			object_container_addend(&client->parent, &this->io_container);	///<填充到线程的IO容器里面
+
 			timer_add(hmod, 1, 1 * ONE_SECOND, client);
 		}
 			break;
@@ -101,6 +102,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			rxnum = client->_input(&client->parent, buffer, BUFFER_SIZE, TRUE);
 			debug(DEBUG, "==>recv(%d): %s\n", rxnum, buffer);
 
+			///<反射
 			client->_output(&client->parent, buffer, rxnum);
 		}
 			break;
@@ -168,6 +170,7 @@ int register_thread_daemon(void)
     INIT_LOCK(&ot->msgqueue.lock);
     sem_init(&ot->msgqueue.wait, 0, 0);
 
+	////////////
 	ot->io_container.list.prev = &ot->io_container.list;
 	ot->io_container.list.next = &ot->io_container.list;
 	INIT_LOCK(&ot->io_container.lock);

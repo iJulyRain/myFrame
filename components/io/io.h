@@ -71,12 +71,6 @@ typedef struct object_io
 
 object_io_t new_object_io(const char *io_type, const char *alias);
 
-void register_all_io(void);
-
-void register_io_tcp(void);
-void register_io_udp(void);
-void register_io_com(void);
-
 int io_getfd(object_t parent);
 int io_state(object_t parent);
 void io_close(object_t parent);
@@ -84,5 +78,15 @@ int io_output(object_t parent, const char *buffer, int size);
 int io_input(object_t parent, char *buffer, int size, int clear);
 int io_recv(object_t parent);
 int io_send(object_t parent);
+
+void register_io_tcp(void);
+void register_io_udp(void);
+void register_io_com(void);
+
+void register_all_io(void);
+
+object_io_t new_object_io_tcp(const char *alias);
+object_io_t new_object_io_udp(const char *alias);
+object_io_t new_object_io_com(const char *alias);
 
 #endif
