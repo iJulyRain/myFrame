@@ -17,6 +17,8 @@
  */
 #include "io.h"
 
+#define NAME "io tcp"
+
 static void tcp_info(void)
 {
 	debug(RELEASE, "==> AIO(tcp) writen by li zhixian @2015.06.01 ^.^ <==\n");
@@ -172,10 +174,10 @@ static struct object_io io=
 
 void register_io_tcp(void)
 {
-	object_addend(&io.parent, "io tcp", object_class_type_io);
+	object_addend(&io.parent, NAME, object_class_type_io);
 }
 
 object_io_t new_object_io_tcp(const char *alias)
 {
-	return new_object_io("io tcp", alias);
+	return new_object_io(NAME, alias);
 }

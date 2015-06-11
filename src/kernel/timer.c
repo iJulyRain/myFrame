@@ -17,8 +17,6 @@
  */
 #include "timer.h"
 
-static sem_t block;
-
 extern struct object_information object_container[object_class_type_unknown];
 
 /**
@@ -37,9 +35,114 @@ void timer_add(HMOD hmod, int id, int init_tick, void *user_data)
 	assert(pt);
 
 	pt->hmod = hmod;
+	pt->mode = mode_timer_relative;
 	pt->id = id;
 	pt->init_tick = init_tick;
 	pt->run = TIMER_STOP;
+	pt->user_data = user_data;
+
+	memset(name, 0, OBJ_NAME_MAX);
+	sprintf(name, "%08X:%02d", hmod, id);
+	
+	object_addend(&pt->parent, name, object_class_type_timer);
+}
+
+static void parse_field(const char *field, uint64_t *point, int offset, int max)
+{
+	int i;
+	char *s, *p, *saveptr;
+	int begin, end, index;
+
+	///<1
+	if(strchr(field, '*') == NULL
+	&& strchr(field, '-') == NULL
+	&& strchr(field, ',') == NULL)
+	{
+		index = atoi(field);
+		if(index < (max + offset))
+			*point |= (1 << index);
+	}
+	///< '*'
+	else if(strchr(field, '*') != NULL
+	&& strchr(field, '-') == NULL
+	&& strchr(field, ',') == NULL)
+	{
+		for(i = offset; i < (max + offset); i++)
+			*point |= (1 << i);
+	}
+	///< 8-12
+	else if(strchr(field, '*') == NULL
+	&& strchr(field, '-') != NULL
+	&& strchr(field, ',') == NULL)
+	{
+		s = strdup(field);
+
+		p = strtok_r(s, "-", &saveptr);
+		begin = atoi(p);
+		p = strtok_r(NULL, "-", &saveptr);
+		end = atoi(p);
+
+		for(i = begin; i <= end && i < (max + offset); i++)
+			*point |= (1 << i);
+	}
+	///< 1,3,4
+	else if(strchr(field, '*') == NULL
+	&& strchr(field, '-') == NULL
+	&& strchr(field, ',') != NULL)
+	{
+		s = strdup(field);
+
+		for(p = strtok_r(s, ",", &saveptr); p != NULL; p = strtok_r(NULL, ",", &saveptr))
+		{
+			index = atoi(p);
+			if(index >= (max + offset))
+				continue;
+
+			*point |= (1 << index);
+		}
+	}
+}
+
+static void parse_timestring(const char *timestring, timerpoint_t tp)
+{
+	int index = 0;
+	char *s, *p, *saveptr1;
+	const char *field[5];
+	s = strdup(timestring);
+
+	for(p = strtok_r(s, " ", &saveptr1); p != NULL; p = strtok_r(NULL, " ", &saveptr1))
+	{
+		if(index >= 5)
+			break;
+
+		field[index++] = p;
+	}
+
+	parse_field(field[0], &tp->month, 1, 12);
+	parse_field(field[1], &tp->day, 1, 31);
+	parse_field(field[2], &tp->hour, 0, 24);
+	parse_field(field[3], &tp->minute, 0, 60);
+	parse_field(field[4], &tp->second, 0, 61);
+}
+
+void timer_add_abs(HMOD hmod, int id, const char *timestring, void *user_data)
+{
+	char name[OBJ_NAME_MAX];
+
+	object_timer_t pt = NULL;
+	struct timerpoint tp;
+
+	pt = (object_timer_t)calloc(1, sizeof(struct object_timer));
+	assert(pt);
+
+	memset(&tp, 0, sizeof(struct timerpoint));
+
+	parse_timestring(timestring, &tp);
+
+	pt->hmod = hmod;
+	pt->mode = mode_timer_absolutely;
+	pt->id = id;
+	pt->tp = tp;
 	pt->user_data = user_data;
 
 	memset(name, 0, OBJ_NAME_MAX);
@@ -195,6 +298,8 @@ static void timer_tick(void)
 }
 
 #else
+
+static sem_t block;
 /**
 * @brief SIGALRM信号处理函数
 *
@@ -252,6 +357,8 @@ void *thread_timer_entry(void *parameter)
 	unsigned long long old_timer_counter = 0;
 	object_timer_t pt;
 	sem_t *wait = (sem_t *)parameter;
+	time_t now;
+	struct tm tm;
 
 #if defined(USING_TIMERFD)
 	int ret;
@@ -292,20 +399,37 @@ void *thread_timer_entry(void *parameter)
 
 		ENTER_LOCK(&object_container[object_class_type_timer].lock);
 
+		now = time(NULL);
+		localtime_r(&now, &tm);
+
 		OBJECT_FOREACH(object_class_type_timer, object_timer_t, pt)
 			if(pt->run == TIMER_STOP)
 				continue;
 
-			pt->timeout_tick += (__timer_counter - old_timer_counter);
-			if(pt->timeout_tick < 0)
+			if(pt->mode == mode_timer_relative)
+			{
+				pt->timeout_tick += (__timer_counter - old_timer_counter);
+				if(pt->timeout_tick < 0)
+					pt->timeout_tick = 0;
+
+				if(pt->timeout_tick < pt->init_tick)
+					continue;
+
+				post_message(pt->hmod, MSG_TIMER, (WPARAM)pt->id, (LPARAM)pt->user_data);
+
 				pt->timeout_tick = 0;
-
-			if(pt->timeout_tick < pt->init_tick)
-				continue;
-
-			post_message(pt->hmod, MSG_TIMER, (WPARAM)pt->id, (LPARAM)pt->user_data);
-
-			pt->timeout_tick = 0;
+			}
+			else if(pt->mode == mode_timer_absolutely)
+			{
+				if( (pt->tp.month >> (tm.tm_mon + 1) & 0x01)
+				&&( (pt->tp.day >> tm.tm_mday) & 0x01 )
+				&&( (pt->tp.hour >> tm.tm_hour) & 0x01 )
+				&&( (pt->tp.minute >> tm.tm_min) & 0x01 )
+				&&( (pt->tp.second >> tm.tm_sec) & 0x01 ) )
+				{
+					post_message(pt->hmod, MSG_TIMER, (WPARAM)pt->id, (LPARAM)pt->user_data);
+				}
+			}
 		OBJECT_FOREACH_END
 
 		EXIT_LOCK(&object_container[object_class_type_timer].lock);

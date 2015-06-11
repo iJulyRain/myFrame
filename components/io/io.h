@@ -20,7 +20,7 @@
 #include <sys/stat.h>
 #include <arpa/inet.h>
 
-enum mode
+enum
 {
 	mode_tcp_client = 1,
 	mode_tcp_server,

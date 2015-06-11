@@ -48,6 +48,14 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			client->_info();
 			client->_init(&client->parent, hmod, "192.168.199.172:40001");
 			object_container_addend(&client->parent, &this->io_container);	///<填充到线程的IO容器里面
+			
+			///<新建一个com
+			client = new_object_io_com("com client");
+			assert(client);
+			client->_info();
+			client->_init(&client->parent, hmod, "/dev/ttyS0 9600,8n1");
+			object_container_addend(&client->parent, &this->io_container);	///<填充到线程的IO容器里面
+			timer_add_abs(hmod, 2, "* * * * 10", client);
 
 			///<新建一个udp client
 			client = new_object_io_udp("udp client");
@@ -65,11 +73,15 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
 			if(id == 1)
 			{
-				debug(DEBUG, "I WANNA THIS.\n");
-
 				object_io_t client = (object_io_t)lparam;
 
 				client->_output(&client->parent, "hehe da!\r\n", strlen("hehe da!\r\n"));
+			}
+			if(id == 2)
+			{
+				object_io_t client = (object_io_t)lparam;
+
+				client->_output(&client->parent, "hehe da2!\r\n", strlen("hehe da2!\r\n"));
 			}
 		}
 			break;
@@ -86,6 +98,8 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
 			if(!strcmp(object_name((object_t)client), "udp client"))
 				timer_start(hmod, 1);
+			if(!strcmp(object_name((object_t)client), "com client"))
+				timer_start(hmod, 2);
 		}
 			break;
 		case MSG_AIOIN:

@@ -24,6 +24,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <string.h>
 #include <assert.h>
@@ -39,8 +40,23 @@
 #define TIMER_STOP		0
 #define TIMER_START		1
 
-#define TICK_PER_SECOND 100
+#define TICK_PER_SECOND 10
 #define ONE_SECOND	TICK_PER_SECOND
+
+enum
+{
+	mode_timer_relative = 1,
+	mode_timer_absolutely
+};
+
+typedef struct timerpoint
+{
+	uint64_t month;
+	uint64_t day;
+	uint64_t hour;
+	uint64_t minute;
+	uint64_t second;
+}*timerpoint_t;
 
 /**
 * @brief 定时器回调函数类型
@@ -58,15 +74,22 @@ typedef struct object_timer
 {
 	struct object parent;	///<基类
 
+	int mode;	///<定时器种类
+
 	HMOD hmod;	///<定时器归属
 	int id;		///<定时器编号
+
 	int timeout_tick;	///<当前定时计数
 	int init_tick;	///<定时器超时时间
+	////////////////////////////////////
+	struct timerpoint tp;	///<绝对时间点
+
 	int run;	///<0 pause, 1 run
 	void *user_data;
 }*object_timer_t;
 
 void timer_add(HMOD hmod, int id, int init_tick, void *user_data);
+void timer_add_abs(HMOD hmod, int id, const char *timestring, void *user_data);
 void timer_remove(HMOD hmod, int id);
 void timer_start(HMOD hmod, int id);
 void timer_stop(HMOD hmod, int id);
