@@ -108,6 +108,7 @@ static void parse_timestring(const char *timestring, timerpoint_t tp)
 	int index = 0;
 	char *s, *p, *saveptr1;
 	const char *field[5];
+
 	s = strdup(timestring);
 
 	for(p = strtok_r(s, " ", &saveptr1); p != NULL; p = strtok_r(NULL, " ", &saveptr1))
@@ -118,11 +119,14 @@ static void parse_timestring(const char *timestring, timerpoint_t tp)
 		field[index++] = p;
 	}
 
-	parse_field(field[0], &tp->month, 1, 12);
-	parse_field(field[1], &tp->day, 1, 31);
-	parse_field(field[2], &tp->hour, 0, 24);
-	parse_field(field[3], &tp->minute, 0, 60);
-	parse_field(field[4], &tp->second, 0, 61);
+	if(index >= 5)
+	{
+		parse_field(field[0], &tp->month, 1, 12);
+		parse_field(field[1], &tp->day, 1, 31);
+		parse_field(field[2], &tp->hour, 0, 24);
+		parse_field(field[3], &tp->minute, 0, 60);
+		parse_field(field[4], &tp->second, 0, 61);
+	}
 }
 
 void timer_add_abs(HMOD hmod, int id, const char *timestring, void *user_data)
@@ -357,7 +361,7 @@ void *thread_timer_entry(void *parameter)
 	unsigned long long old_timer_counter = 0;
 	object_timer_t pt;
 	sem_t *wait = (sem_t *)parameter;
-	time_t now;
+	time_t now, ago = 0;
 	struct tm tm;
 
 #if defined(USING_TIMERFD)
@@ -397,10 +401,10 @@ void *thread_timer_entry(void *parameter)
 		sem_wait(&block);
 	#endif
 
-		ENTER_LOCK(&object_container[object_class_type_timer].lock);
-
 		now = time(NULL);
 		localtime_r(&now, &tm);
+
+		ENTER_LOCK(&object_container[object_class_type_timer].lock);
 
 		OBJECT_FOREACH(object_class_type_timer, object_timer_t, pt)
 			if(pt->run == TIMER_STOP)
@@ -421,13 +425,15 @@ void *thread_timer_entry(void *parameter)
 			}
 			else if(pt->mode == mode_timer_absolutely)
 			{
-				if( (pt->tp.month >> (tm.tm_mon + 1) & 0x01)
-				&&( (pt->tp.day >> tm.tm_mday) & 0x01 )
-				&&( (pt->tp.hour >> tm.tm_hour) & 0x01 )
-				&&( (pt->tp.minute >> tm.tm_min) & 0x01 )
-				&&( (pt->tp.second >> tm.tm_sec) & 0x01 ) )
+				if((now != ago)
+				&& (pt->tp.month >> (tm.tm_mon + 1)) & 0x01
+				&& (pt->tp.day >> tm.tm_mday) & 0x01
+				&& (pt->tp.hour >> tm.tm_hour) & 0x01
+				&& (pt->tp.minute >> tm.tm_min) & 0x01
+				&& (pt->tp.second >> tm.tm_sec) & 0x01)
 				{
 					post_message(pt->hmod, MSG_TIMER, (WPARAM)pt->id, (LPARAM)pt->user_data);
+					ago = now;
 				}
 			}
 		OBJECT_FOREACH_END

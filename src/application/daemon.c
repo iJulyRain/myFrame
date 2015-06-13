@@ -98,6 +98,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
 			if(!strcmp(object_name((object_t)client), "udp client"))
 				timer_start(hmod, 1);
+
 			if(!strcmp(object_name((object_t)client), "com client"))
 				timer_start(hmod, 2);
 		}
