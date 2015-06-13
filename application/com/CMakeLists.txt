@@ -1,6 +1,8 @@
-aux_source_directory(. main)
+aux_source_directory(. com)
 
-link_directories(${PROJECT_SOURCE_DIR}/src/application
+set(TARGET com_test)
+
+link_directories(${PROJECT_SOURCE_DIR}/kernel
 				 ${PROJECT_SOURCE_DIR}/components/io
 				 ${PROJECT_SOURCE_DIR}/components/buffer
 				 ${PROJECT_SOURCE_DIR}/components/database
@@ -12,6 +14,6 @@ link_directories(${PROJECT_SOURCE_DIR}/src/application
 				 ${PROJECT_SOURCE_DIR}/utilities/zlog
 				 )
 
-add_executable(${TARGET} ${main})
+add_executable(${TARGET} ${com})
 
-target_link_libraries(${TARGET} common app io buffer database zlog sqlite3 lua mb mxml pthread dl)
+target_link_libraries(${TARGET} common kernel io buffer database zlog sqlite3 lua mb mxml pthread dl)

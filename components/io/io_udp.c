@@ -16,6 +16,7 @@
  * =====================================================================================
  */
 #include "io.h"
+#include "thread.h"
 
 #define NAME	"io udp"
 
@@ -30,6 +31,7 @@ static int udp_init(object_t parent, HMOD hmod, const char *settings)
 	struct sockaddr_in *addr;
 	char ip[16];
 	int port;
+	object_thread_t this = (object_thread_t)hmod;
 
 	assert(settings);
 
@@ -54,6 +56,8 @@ static int udp_init(object_t parent, HMOD hmod, const char *settings)
 
 	io->buffer = buffer_create();
 	io->event = poller_event_create(io);
+
+	object_container_addend(&io->parent, &this->io_container);	///<填充到线程的IO容器里面
 
 	return 0;
 }

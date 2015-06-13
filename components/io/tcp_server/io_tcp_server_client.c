@@ -50,7 +50,7 @@ static int tcp_server_client_init(object_t parent, HMOD hmod, const char *settin
 	addr->sin_addr.s_addr = inet_addr(ip);
 	addr->sin_port = htons(port);
 
-	io->isconnect = ONLINE;
+	io->isconnect = OFFLINE;
 
 	io->buffer = buffer_create();
 	io->event = poller_event_create(io);
@@ -60,7 +60,9 @@ static int tcp_server_client_init(object_t parent, HMOD hmod, const char *settin
 
 static int tcp_server_client_connect(object_t parent)
 {
-	return io_state(parent);
+	object_io_t io = (object_io_t)parent;
+
+	return (io->isconnect = ONLINE);
 }
 
 static int tcp_server_client_getfd(object_t parent)

@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  init.c
+ *       Filename:  tcp_client.h
  *
- *    Description:  app init
+ *    Description:  tcp client header
  *
  *        Version:  1.0
- *        Created:  06/02/2015 11:33:47 PM
+ *        Created:  06/13/2015 11:19:59 PM
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -15,11 +15,9 @@
  *
  * =====================================================================================
  */
-#include "common.h"
+#ifndef __TCP_CLIENT_H__
+#define __TCP_CLIENT_H__
 
-#include "daemon.h"	///<包含应用程序的头文件
+int register_thread_tcp_client(void);
 
-void app_init(int argc, char **argv)
-{
-	register_thread_daemon();
-}
+#endif

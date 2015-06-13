@@ -1,27 +1,27 @@
 /*
  * =====================================================================================
  *
- *       Filename:  daemon.c
+ *       Filename:  udp_client.c
  *
- *    Description:  daemon
+ *    Description:  udp client
  *
  *        Version:  1.0
- *        Created:  2014年09月22日 09时51分29秒
+ *        Created:  06/13/2015 11:17:04 PM
  *       Revision:  none
  *       Compiler:  gcc
  *
- *         Author:  lizhixian (R&D), lzx1442@163.com
- *        Company:  wanwei-tech
+ *         Author:  julyrain (RD), lzx1442@163.com
+ *        Company:  xx
  *
  * =====================================================================================
  */
 #include "common.h"
-#include "daemon.h"
+#include "udp_client.h"
 
-#define NAME "daemon"
+#define NAME "udp client"
 
 /**
-* @brief daemon loop process 
+* @brief loop process 
 *
 * @param hmod handler module
 * @param message message
@@ -38,31 +38,13 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 		{
 			debug(DEBUG, "### '%s'\tMSG_INIT\n", NAME);
 
-			object_thread_t this = (object_thread_t)hmod;
-
 			object_io_t client;
-
-			///<新建一个tcp client
-			client = new_object_io_tcp("tcp client");
-			assert(client);
-			client->_info();
-			client->_init(&client->parent, hmod, "192.168.199.172:40001");
-			object_container_addend(&client->parent, &this->io_container);	///<填充到线程的IO容器里面
-			
-			///<新建一个com
-			client = new_object_io_com("com client");
-			assert(client);
-			client->_info();
-			client->_init(&client->parent, hmod, "/dev/ttyS0 9600,8n1");
-			object_container_addend(&client->parent, &this->io_container);	///<填充到线程的IO容器里面
-			timer_add_abs(hmod, 2, "* * * * 10", client);
 
 			///<新建一个udp client
 			client = new_object_io_udp("udp client");
 			assert(client);
 			client->_info();
 			client->_init(&client->parent, hmod, "192.168.199.172:40002");
-			object_container_addend(&client->parent, &this->io_container);	///<填充到线程的IO容器里面
 
 			timer_add(hmod, 1, 1 * ONE_SECOND, client);
 		}
@@ -73,17 +55,10 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
 			if(id == 1)
 			{
-				debug(DEBUG, "==> MSG_TIMER 1\n");
+				char *msg = "test udp client\r\n";
 				object_io_t client = (object_io_t)lparam;
 
-				client->_output(&client->parent, "hehe da!\r\n", strlen("hehe da!\r\n"));
-			}
-			if(id == 2)
-			{
-				debug(DEBUG, "==> MSG_TIMER 2\n");
-				object_io_t client = (object_io_t)lparam;
-
-				client->_output(&client->parent, "hehe da2!\r\n", strlen("hehe da2!\r\n"));
+				client->_output(&client->parent, msg, strlen(msg));
 			}
 		}
 			break;
@@ -98,11 +73,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
 			debug(DEBUG, "==> '%s' connect to '%s' success!\n", object_name((object_t)client), client->settings);
 
-			if(!strcmp(object_name((object_t)client), "udp client"))
-				timer_start(hmod, 1);
-
-			if(!strcmp(object_name((object_t)client), "com client"))
-				timer_start(hmod, 2);
+			timer_start(hmod, 1);
 		}
 			break;
 		case MSG_AIOIN:
@@ -125,7 +96,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			break;
 		case MSG_AIOOUT:
 		{
-	//		debug(DEBUG, "==> write complete!\n");
+			debug(DEBUG, "==> write complete!\n");
 		}
 			break;
 
@@ -141,6 +112,8 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			object_io_t client = (object_io_t)lparam;
 
 			debug(DEBUG, "==> '%s' connect to '%s' break!\n", object_name((object_t)client), client->settings);
+
+			timer_stop(hmod, 1);
 		}
 			break;
 	}
@@ -149,7 +122,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 }
 
 /**
-* @brief daemon loop thread start_routine
+* @brief loop thread start_routine
 *
 * @param data argument of start routine_
 *
@@ -174,7 +147,7 @@ static void *thread_entry(void *parameter)
 *
 * @return always 0 
 */
-int register_thread_daemon(void)
+int register_thread_udp_client(void)
 {
     object_thread_t ot;
 

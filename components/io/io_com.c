@@ -16,6 +16,7 @@
  * =====================================================================================
  */
 #include "io.h"
+#include "thread.h"
 
 #include <termios.h>
 #include <fcntl.h>
@@ -208,6 +209,7 @@ static int com_init(object_t parent, HMOD hmod, const char *settings)
 {
 	object_io_t io;
 	struct com *com;
+	object_thread_t this = (object_thread_t)hmod;
 
 	assert(settings);
 
@@ -229,6 +231,8 @@ static int com_init(object_t parent, HMOD hmod, const char *settings)
 
 	io->buffer = buffer_create();
 	io->event = poller_event_create(io);
+
+	object_container_addend(&io->parent, &this->io_container);	///<填充到线程的IO容器里面
 
 	return 0;
 }

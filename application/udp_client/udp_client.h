@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  daemon.h
+ *       Filename:  udp_client.h
  *
- *    Description:  daemon 
+ *    Description:  udp client
  *
  *        Version:  1.0
- *        Created:  06/02/2015 11:34:42 PM
+ *        Created:  06/13/2015 11:25:40 PM
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -15,9 +15,9 @@
  *
  * =====================================================================================
  */
-#ifndef __DAEMON_H__
-#define __DAEMON_H__
+#ifndef __UDP_CLIENT_H__
+#define __UDP_CLIENT_H__
 
-int register_thread_daemon(void);
+int register_thread_udp_client(void);
 
 #endif

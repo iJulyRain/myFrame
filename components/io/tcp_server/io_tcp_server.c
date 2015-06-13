@@ -16,6 +16,7 @@
  * =====================================================================================
  */
 #include "io.h"
+#include "thread.h"
 
 #define NAME "io tcp server"
 
@@ -30,6 +31,7 @@ static int tcp_server_init(object_t parent, HMOD hmod, const char *settings)
 	struct sockaddr_in *addr;
 	char ip[16];
 	int port, backlog;
+	object_thread_t this = (object_thread_t)hmod;
 
 	assert(settings);
 
@@ -56,17 +58,21 @@ static int tcp_server_init(object_t parent, HMOD hmod, const char *settings)
 	bind(io->fd, (struct sockaddr *)addr, sizeof(struct sockaddr_in));
 	listen(io->fd, backlog);
 
-	io->isconnect = ONLINE;	///<服务器监听socket不需要connect
+	io->isconnect = OFFLINE;
 
 	io->buffer = NULL;	///<监听socket不需要buffer
 	io->event = poller_event_create(io);
+
+	object_container_addend(&io->parent, &this->io_container);	///<填充到线程的IO容器里面
 
 	return 0;
 }
 
 static int tcp_server_connect(object_t parent)
 {
-	return io_state(parent); 
+	object_io_t io = (object_io_t)parent;
+
+	return (io->isconnect = ONLINE);
 }
 
 static int tcp_server_getfd(object_t parent)
@@ -106,27 +112,32 @@ static int tcp_server_recv(object_t parent)
 	struct sockaddr_in addr;
 	socklen_t size;
 	object_io_t io, client;
+	object_thread_t this;
 	
 	io = (object_io_t)parent;
+	this = (object_thread_t)io->hmod;
 
 	memset(&addr, 0, sizeof(struct sockaddr_in));
 	size = sizeof(struct sockaddr_in);
 
 	sd = accept(io->fd, (struct sockaddr *)&addr, &size);
 	if(sd < 0)
-		return -1;
+		return -2;
 	
 	memset(ip, 0, sizeof(ip));
 	strncpy(ip, inet_ntoa(addr.sin_addr), 15);
 	port = ntohs(addr.sin_port);
 
 	memset(settings, 0, sizeof(settings));
-	snprintf(settings, 31, "%p:%d", ip, port);
+	snprintf(settings, 31, "%s:%d", ip, port);
 
+	debug(DEBUG, "==> new client: '%s'\n", settings);
+
+	///<创建一个对等端
 	client = new_object_io_tcp_server_client(settings);
 	client->_setfd(&client->parent, sd);
-
 	client->_init(&client->parent, io->hmod, settings); ///<与监听描述符同一个线程
+	object_container_addend(&client->parent, &this->io_container);
 
 	return 0; 
 }
