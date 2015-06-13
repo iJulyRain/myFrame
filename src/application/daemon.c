@@ -73,12 +73,14 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
 			if(id == 1)
 			{
+				debug(DEBUG, "==> MSG_TIMER 1\n");
 				object_io_t client = (object_io_t)lparam;
 
 				client->_output(&client->parent, "hehe da!\r\n", strlen("hehe da!\r\n"));
 			}
 			if(id == 2)
 			{
+				debug(DEBUG, "==> MSG_TIMER 2\n");
 				object_io_t client = (object_io_t)lparam;
 
 				client->_output(&client->parent, "hehe da2!\r\n", strlen("hehe da2!\r\n"));
@@ -123,7 +125,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			break;
 		case MSG_AIOOUT:
 		{
-			debug(DEBUG, "==> write complete!\n");
+	//		debug(DEBUG, "==> write complete!\n");
 		}
 			break;
 
@@ -139,7 +141,6 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			object_io_t client = (object_io_t)lparam;
 
 			debug(DEBUG, "==> '%s' connect to '%s' break!\n", object_name((object_t)client), client->settings);
-			timer_stop(hmod, 1);
 		}
 			break;
 	}

@@ -128,6 +128,11 @@ static int tcp_getfd(object_t parent)
 	return io_getfd(parent); 
 }
 
+static int tcp_setfd(object_t parent, int fd)
+{
+	return io_setfd(parent, fd); 
+}
+
 static int tcp_state(object_t parent)
 {
 	return io_state(parent); 
@@ -164,6 +169,7 @@ static struct object_io io=
 	._init 		= 	tcp_init,
 	._connect 	= 	tcp_connect,
 	._getfd 	= 	tcp_getfd,
+	._setfd 	= 	tcp_setfd,
 	._state 	= 	tcp_state,
 	._close 	= 	tcp_close,
 	._input		=	tcp_input,

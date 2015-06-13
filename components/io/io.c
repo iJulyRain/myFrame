@@ -20,6 +20,8 @@
 void register_all_io(void)
 {
 	register_io_tcp();
+	register_io_tcp_server();
+	register_io_tcp_server_client();
 	register_io_udp();
 	register_io_com();
 }
@@ -49,6 +51,15 @@ int io_getfd(object_t parent)
 	io = (object_io_t)parent;
 
 	return io->fd;
+}
+
+int io_setfd(object_t parent, int fd)
+{
+	object_io_t io;
+
+	io = (object_io_t)parent;
+
+	return (io->fd = fd);
 }
 
 int io_state(object_t parent)

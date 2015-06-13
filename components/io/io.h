@@ -24,8 +24,11 @@ enum
 {
 	mode_tcp_client = 1,
 	mode_tcp_server,
+	mode_tcp_server_client,
 	mode_udp_client,
 	mode_udp_server,
+	mode_unixdomain_client,
+	mode_unixdomain_server,
 	mode_uart
 };
 
@@ -46,8 +49,7 @@ typedef struct object_io
 
 	//配置信息(拷贝) 字符串型
 	//串口：COM1 9600,8n1
-	//TCP client：192.168.1.100:10001
-	//UDP client：192.168.1.100:10001
+	//TCP client/UDP client/TCP server/UDP server：192.168.1.100:10001
 	//unixdomain client: /tmp/myframe.socket
 	const char *settings;
 
@@ -60,6 +62,7 @@ typedef struct object_io
 	int  (*_init)	(object_t parent, HMOD hmod, const char* settings);	///<初始化
 	int  (*_connect)(object_t parent);	///<连接
 	int  (*_getfd)	(object_t parent);	///<描述符
+	int  (*_setfd)	(object_t parent, int fd);	///<设置描述符
 	int  (*_state)	(object_t parent);	///<状态
 	void (*_close)	(object_t parent);	///<关闭
 	int  (*_input)	(object_t parent, char *buffer, int size, int clear);	///<读
@@ -72,6 +75,7 @@ typedef struct object_io
 object_io_t new_object_io(const char *io_type, const char *alias);
 
 int io_getfd(object_t parent);
+int io_setfd(object_t parent, int fd);
 int io_state(object_t parent);
 void io_close(object_t parent);
 int io_output(object_t parent, const char *buffer, int size);
@@ -80,12 +84,16 @@ int io_recv(object_t parent);
 int io_send(object_t parent);
 
 void register_io_tcp(void);
+void register_io_tcp_server(void);
+void register_io_tcp_server_client(void);
 void register_io_udp(void);
 void register_io_com(void);
 
 void register_all_io(void);
 
 object_io_t new_object_io_tcp(const char *alias);
+object_io_t new_object_io_tcp_server(const char *alias);
+object_io_t new_object_io_tcp_server_client(const char *alias);
 object_io_t new_object_io_udp(const char *alias);
 object_io_t new_object_io_com(const char *alias);
 

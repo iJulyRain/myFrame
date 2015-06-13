@@ -258,6 +258,11 @@ static int com_getfd(object_t parent)
 	return io_getfd(parent);
 }
 
+static int com_setfd(object_t parent, int fd)
+{
+	return io_setfd(parent, fd);
+}
+
 static int com_state(object_t parent)
 {
 	return io_state(parent); 
@@ -294,6 +299,7 @@ static struct object_io io=
 	._init 		= 	com_init,
 	._connect 	= 	com_connect,
 	._getfd		=	com_getfd,
+	._setfd		=	com_setfd,
 	._state 	= 	com_state,
 	._close 	= 	com_close,
 	._input		=	com_input,

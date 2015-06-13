@@ -79,6 +79,11 @@ static int udp_getfd(object_t parent)
 	return io_getfd(parent);
 }
 
+static int udp_setfd(object_t parent, int fd)
+{
+	return io_setfd(parent, fd);
+}
+
 static int udp_state(object_t parent)
 {
 	return io_state(parent); 
@@ -115,6 +120,7 @@ static struct object_io io=
 	._init 		= 	udp_init,
 	._connect 	= 	udp_connect,
 	._getfd		= 	udp_getfd,
+	._setfd		= 	udp_setfd,
 	._state 	= 	udp_state,
 	._close 	= 	udp_close,
 	._input		=	udp_input,
