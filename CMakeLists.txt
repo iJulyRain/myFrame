@@ -14,16 +14,39 @@ include_directories(${PROJECT_SOURCE_DIR}/include
 					${PROJECT_SOURCE_DIR}/components/buffer
 					${PROJECT_SOURCE_DIR}/components/database
 					${PROJECT_SOURCE_DIR}/kernel
-					${PROJECT_SOURCE_DIR}/utilities/include
-					${PROJECT_SOURCE_DIR}/utilities/sqlite3
-					${PROJECT_SOURCE_DIR}/utilities/ini
-					${PROJECT_SOURCE_DIR}/utilities/modbus
-					${PROJECT_SOURCE_DIR}/utilities/zlog
-					${PROJECT_SOURCE_DIR}/utilities/mxml
-					${PROJECT_SOURCE_DIR}/utilities/lua
+					${PROJECT_SOURCE_DIR}/3rd/sqlite3
+					${PROJECT_SOURCE_DIR}/3rd/ini
+					${PROJECT_SOURCE_DIR}/3rd/modbus
+					${PROJECT_SOURCE_DIR}/3rd/zlog
+					${PROJECT_SOURCE_DIR}/3rd/mxml
+					${PROJECT_SOURCE_DIR}/3rd/lua
 					)
 
+link_directories(
+				 ${PROJECT_SOURCE_DIR}/
+				 ${PROJECT_SOURCE_DIR}/kernel
+				 ${PROJECT_SOURCE_DIR}/components/io
+				 ${PROJECT_SOURCE_DIR}/components/buffer
+				 ${PROJECT_SOURCE_DIR}/components/database
+				 ${PROJECT_SOURCE_DIR}/3rd/common
+				 ${PROJECT_SOURCE_DIR}/3rd/lua
+				 ${PROJECT_SOURCE_DIR}/3rd/modbus
+				 ${PROJECT_SOURCE_DIR}/3rd/mxml
+				 ${PROJECT_SOURCE_DIR}/3rd/sqlite3
+				 ${PROJECT_SOURCE_DIR}/3rd/zlog
+				 )
+
 add_subdirectory(kernel)
-add_subdirectory(utilities)
+add_subdirectory(3rd)
 add_subdirectory(components)
+
+add_library(myevent SHARED build.c)
+target_link_libraries(
+	myevent
+	"-Wl,--whole-archive"
+	common kernel io buffer database zlog sqlite3 lua mb mxml 
+	"-Wl,--no-whole-archive"
+	pthread dl m
+)
+
 add_subdirectory(application)
