@@ -45,6 +45,10 @@ typedef struct object_thread
 	struct msgqueue msgqueue;	///<消息队列
 }*object_thread_t;
 
+void *thread_entry(void *parameter);
+object_thread_t new_object_thread(thread_proc_t thread_proc); 
 int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam);
+int start_object_thread(object_thread_t ot);
+int kill_object_thread(object_thread_t ot);
 
 #endif

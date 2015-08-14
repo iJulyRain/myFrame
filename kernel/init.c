@@ -84,6 +84,7 @@ static int system_threads(void)
 	object_thread_t ot;
 
 	///<启动定时器线程
+	debug(DEBUG, "==> start thread '%s'\n", "timer");
 	sem_init(&wait, 0, 0);
 	ret = pthread_create(&tid, NULL, thread_timer_entry, &wait);
 	if(ret != 0)
@@ -97,8 +98,7 @@ static int system_threads(void)
 	///<启动应用线程
 	OBJECT_FOREACH(object_class_type_thread, object_thread_t, ot)
 		debug(DEBUG, "==> start thread '%s'\n", ((object_t)ot)->name);
-		send_message((HMOD)ot, MSG_INIT, 0, 0);
-		ret = pthread_create(&ot->tid, NULL, ot->entry, ot);
+		ret = start_object_thread(ot);
 		if(ret != 0)
 		{
 			debug(RELEASE, "==> create thread '%s' error[%d]!\n", ((object_t)ot)->name, ret);

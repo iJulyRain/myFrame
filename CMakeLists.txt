@@ -40,7 +40,7 @@ add_subdirectory(kernel)
 add_subdirectory(3rd)
 add_subdirectory(components)
 
-add_library(myevent SHARED build.c)
+add_library(myevent STATIC build.c)
 target_link_libraries(
 	myevent
 	"-Wl,--whole-archive"

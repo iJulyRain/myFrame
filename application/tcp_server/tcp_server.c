@@ -111,27 +111,6 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 }
 
 /**
-* @brief loop thread start_routine
-*
-* @param data argument of start routine_
-*
-* @return NULL, but never return 
-*/
-static void *thread_entry(void *parameter)
-{
-    struct msg msg;
-    HMOD hmod;
-
-    hmod = (HMOD)parameter; 
-
-    while(!get_message(hmod, &msg))
-        dispatch_message(&msg);
-
-	return NULL;
-}
-
-
-/**
 * @brief register thread module
 *
 * @return always 0 
@@ -140,19 +119,8 @@ int register_thread_tcp_server(void)
 {
     object_thread_t ot;
 
-    ot = (object_thread_t)calloc(1, sizeof(struct object_thread));
-    assert(ot);
-
-    ot->thread_proc = thread_proc;
-    ot->entry = thread_entry;
-    INIT_LOCK(&ot->msgqueue.lock);
-    sem_init(&ot->msgqueue.wait, 0, 0);
-
-	////////////
-	ot->io_container.list.prev = &ot->io_container.list;
-	ot->io_container.list.next = &ot->io_container.list;
-	INIT_LOCK(&ot->io_container.lock);
-	ot->io_container.size = 0;
+    ot = new_object_thread(thread_proc); 
+	assert(ot);
 
     object_addend(&ot->parent, NAME, object_class_type_thread);
 

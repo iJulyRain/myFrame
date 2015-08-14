@@ -25,6 +25,9 @@
 #include <pthread.h>
 #include <semaphore.h>
 
+
+#define MSG_TERM		0x0009
+
 /*
  * brief Ready to initialize modules
  */
@@ -53,6 +56,8 @@
 #define MSG_AIOCONN		0x0007
 
 #define MSG_AIOBREAK	0x0008
+
+#define MSG_STATE		0x0009
 
 /*
  * brief Indicates a message has post
