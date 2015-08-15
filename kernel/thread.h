@@ -46,9 +46,12 @@ typedef struct object_thread
 }*object_thread_t;
 
 void *thread_entry(void *parameter);
-object_thread_t new_object_thread(thread_proc_t thread_proc); 
 int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam);
+
+object_thread_t new_object_thread(thread_proc_t thread_proc); 
 int start_object_thread(object_thread_t ot);
 int kill_object_thread(object_thread_t ot);
+void set_object_thread_add_data(object_thread_t ot, DWORD add_data);
+DWORD get_object_thread_add_data(object_thread_t ot);
 
 #endif

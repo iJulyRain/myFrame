@@ -40,6 +40,9 @@
 #define TIMER_STOP		0
 #define TIMER_START		1
 
+#define TIMER_ASYNC		0
+#define TIMER_SYNC		1
+
 #define TICK_PER_SECOND 10
 #define ONE_SECOND	TICK_PER_SECOND
 
@@ -85,11 +88,12 @@ typedef struct object_timer
 	struct timerpoint tp;	///<绝对时间点
 
 	int run;	///<0 pause, 1 run
+	int type;	///<0 async, 1 sync
 	void *user_data;
 }*object_timer_t;
 
-void timer_add(HMOD hmod, int id, int init_tick, void *user_data);
-void timer_add_abs(HMOD hmod, int id, const char *timestring, void *user_data);
+void timer_add(HMOD hmod, int id, int init_tick, void *user_data, int type);
+void timer_add_abs(HMOD hmod, int id, const char *timestring, void *user_data, int type);
 void timer_remove(HMOD hmod, int id);
 void timer_start(HMOD hmod, int id);
 void timer_stop(HMOD hmod, int id);

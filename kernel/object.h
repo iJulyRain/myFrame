@@ -61,7 +61,8 @@ struct object_information
 	list_t list;				///<链表头
 };
 
-void object_container_init(void);
+void global_container_init(void);
+void object_container_init(struct object_information *container);
 object_t object_container_find(const char *name, struct object_information *container);
 object_t object_find(const char *name, int type);
 void object_container_addend(object_t object, struct object_information *container);

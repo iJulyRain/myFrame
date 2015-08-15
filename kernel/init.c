@@ -118,7 +118,7 @@ int init(int argc, char **argv)
 {
 	init_print_level();	///< console 消息级别
 
-	object_container_init();	///<对象容器初始化
+	global_container_init();	///<对象容器初始化
 
 	install_sighandler();	///<安装信号处理函数
 	register_class();

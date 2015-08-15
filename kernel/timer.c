@@ -26,7 +26,7 @@ extern struct object_information object_container[object_class_type_unknown];
 * @param id 定时器ID
 * @param init_tick 定时器初始计数
 */
-void timer_add(HMOD hmod, int id, int init_tick, void *user_data)
+void timer_add(HMOD hmod, int id, int init_tick, void *user_data, int type)
 {
 	char name[OBJ_NAME_MAX];
 	object_timer_t pt = NULL;
@@ -39,6 +39,7 @@ void timer_add(HMOD hmod, int id, int init_tick, void *user_data)
 	pt->id = id;
 	pt->init_tick = init_tick;
 	pt->run = TIMER_STOP;
+	pt->type = type;
 	pt->user_data = user_data;
 
 	memset(name, 0, OBJ_NAME_MAX);
@@ -129,7 +130,7 @@ static void parse_timestring(const char *timestring, timerpoint_t tp)
 	}
 }
 
-void timer_add_abs(HMOD hmod, int id, const char *timestring, void *user_data)
+void timer_add_abs(HMOD hmod, int id, const char *timestring, void *user_data, int type)
 {
 	char name[OBJ_NAME_MAX];
 
@@ -147,6 +148,7 @@ void timer_add_abs(HMOD hmod, int id, const char *timestring, void *user_data)
 	pt->mode = mode_timer_absolutely;
 	pt->id = id;
 	pt->tp = tp;
+	pt->type = type;
 	pt->user_data = user_data;
 
 	memset(name, 0, OBJ_NAME_MAX);
@@ -419,7 +421,10 @@ void *thread_timer_entry(void *parameter)
 				if(pt->timeout_tick < pt->init_tick)
 					continue;
 
-				post_message(pt->hmod, MSG_TIMER, (WPARAM)pt->id, (LPARAM)pt->user_data);
+				if(pt->type == TIMER_ASYNC)
+					post_message(pt->hmod, MSG_TIMER, (WPARAM)pt->id, (LPARAM)pt->user_data);
+				else if(pt->type == TIMER_SYNC)
+					send_message(pt->hmod, MSG_TIMER, (WPARAM)pt->id, (LPARAM)pt->user_data);
 
 				pt->timeout_tick = 0;
 			}
@@ -432,7 +437,11 @@ void *thread_timer_entry(void *parameter)
 				&& (pt->tp.minute >> tm.tm_min) & 0x01
 				&& (pt->tp.second >> tm.tm_sec) & 0x01)
 				{
-					post_message(pt->hmod, MSG_TIMER, (WPARAM)pt->id, (LPARAM)pt->user_data);
+					if(pt->type == TIMER_ASYNC)
+						post_message(pt->hmod, MSG_TIMER, (WPARAM)pt->id, (LPARAM)pt->user_data);
+					else if(pt->type == TIMER_SYNC)
+						send_message(pt->hmod, MSG_TIMER, (WPARAM)pt->id, (LPARAM)pt->user_data);
+
 					ago = now;
 				}
 			}

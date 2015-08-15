@@ -25,7 +25,7 @@ int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 		case MSG_INIT:
 		{
 			///<用于定时重连
-			timer_add(hmod, 0, 1 * ONE_SECOND, NULL);
+			timer_add(hmod, 0, 1 * ONE_SECOND, NULL, TIMER_ASYNC);
 			timer_start(hmod, 0);
 		}
 			break;
@@ -110,10 +110,7 @@ object_thread_t new_object_thread(thread_proc_t thread_proc)
     sem_init(&ot->msgqueue.wait, 0, 0);
 
 	////////////
-	ot->io_container.list.prev = &ot->io_container.list;
-	ot->io_container.list.next = &ot->io_container.list;
-	INIT_LOCK(&ot->io_container.lock);
-	ot->io_container.size = 0;
+	object_container_init(&ot->io_container);
 
 	return ot;
 }
@@ -130,4 +127,14 @@ int kill_object_thread(object_thread_t ot)
 	send_message((HMOD)ot, MSG_TERM, 0, 0);	///<释放线程中可能用到的资源，此处有雷
 
 	return pthread_join(ot->tid, NULL);
+}
+
+void set_object_thread_add_data(object_thread_t ot, DWORD add_data)
+{
+	ot->add_data = add_data;
+}
+
+DWORD get_object_thread_add_data(object_thread_t ot)
+{
+	return ot->add_data;
 }

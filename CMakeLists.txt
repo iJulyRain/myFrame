@@ -27,6 +27,7 @@ link_directories(
 				 ${PROJECT_SOURCE_DIR}/kernel
 				 ${PROJECT_SOURCE_DIR}/components/io
 				 ${PROJECT_SOURCE_DIR}/components/buffer
+				 ${PROJECT_SOURCE_DIR}/components/thread_pool
 				 ${PROJECT_SOURCE_DIR}/components/database
 				 ${PROJECT_SOURCE_DIR}/3rd/common
 				 ${PROJECT_SOURCE_DIR}/3rd/lua
@@ -44,7 +45,7 @@ add_library(myevent STATIC build.c)
 target_link_libraries(
 	myevent
 	"-Wl,--whole-archive"
-	common kernel io buffer database zlog sqlite3 lua mb mxml 
+	common kernel io buffer thread_pool database zlog sqlite3 lua mb mxml 
 	"-Wl,--no-whole-archive"
 	pthread dl m
 )

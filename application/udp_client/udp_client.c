@@ -46,7 +46,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			client->_info();
 			client->_init(&client->parent, hmod, "192.168.199.172:40002");
 
-			timer_add(hmod, 1, 1 * ONE_SECOND, client);
+			timer_add(hmod, 1, 1 * ONE_SECOND, client, TIMER_ASYNC);
 		}
 			break;
 		case MSG_TIMER:

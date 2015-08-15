@@ -22,7 +22,7 @@ extern struct object_information object_container[object_class_type_unknown];
 /**
 * @brief 初始化对象容器
 */
-void object_container_init(void)
+void global_container_init(void)
 {
 	int i;
 
@@ -30,12 +30,18 @@ void object_container_init(void)
 	{
 		object_container[i].type = i;
 
-		///<指向自己
-		object_container[i].list.prev = &object_container[i].list;
-		object_container[i].list.next = &object_container[i].list;
-
-		INIT_LOCK(&object_container[i].lock);
+		object_container_init(object_container + i);
 	}
+}
+
+void object_container_init(struct object_information *container)
+{
+	INIT_LOCK(&container->lock);
+
+	container->list.prev = &container->list;
+	container->list.next = &container->list;
+
+	container->size = 0;
 }
 
 object_t object_container_find(const char *name, struct object_information *container)
