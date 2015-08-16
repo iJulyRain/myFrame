@@ -65,5 +65,6 @@
 #include "buffer.h"
 #include "io.h"
 #include "database.h"
+#include "thread_pool.h"
 
 #endif

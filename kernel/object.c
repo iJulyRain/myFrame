@@ -150,6 +150,11 @@ void object_delete(object_t object)
 	object_container_delete(object, container);
 }
 
+void object_set_name(object_t object, const char *name)
+{
+	strncpy(object->name, name, OBJ_NAME_MAX);
+}
+
 const char *object_name(object_t object)
 {
 	return object->name;

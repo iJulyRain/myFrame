@@ -26,7 +26,7 @@
 #include <semaphore.h>
 
 
-#define MSG_TERM		0x0009
+#define MSG_TERM		0x0000
 
 /*
  * brief Ready to initialize modules

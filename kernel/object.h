@@ -69,6 +69,7 @@ void object_container_addend(object_t object, struct object_information *contain
 void object_addend(object_t object, const char *name, int type);
 void object_container_delete(object_t object, struct object_information *container);
 void object_delete(object_t object);
+void object_set_name(object_t object, const char *name);
 const char *object_name(object_t object);
 int object_type(object_t object);
 

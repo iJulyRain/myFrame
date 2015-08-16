@@ -12,6 +12,7 @@ set(CMAKE_C_FLAGS "-Wall -g")
 include_directories(${PROJECT_SOURCE_DIR}/include
 					${PROJECT_SOURCE_DIR}/components/io
 					${PROJECT_SOURCE_DIR}/components/buffer
+					${PROJECT_SOURCE_DIR}/components/thread_pool
 					${PROJECT_SOURCE_DIR}/components/database
 					${PROJECT_SOURCE_DIR}/kernel
 					${PROJECT_SOURCE_DIR}/3rd/sqlite3

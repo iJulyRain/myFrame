@@ -9,7 +9,7 @@ static int thread_pool_worker_proc(HMOD hmod, int message, WPARAM wparam, LPARAM
 			object_thread_pool_worker_t worker;
 			worker = (object_thread_pool_worker_t)get_object_thread_add_data((object_thread_t)hmod);
 
-			debug(DEBUG, "==> thread poll worker '%s' init\n", worker->parent.name);
+			debug(DEBUG, "==> thread poll worker '%s' init\n", object_name((object_t)worker));
 
 			timer_add(hmod, 1, 0, worker, TIMER_SYNC); 
 		}
@@ -20,18 +20,24 @@ static int thread_pool_worker_proc(HMOD hmod, int message, WPARAM wparam, LPARAM
 			object_thread_pool_worker_t worker;
 			HMOD host;
 
-			worker = (object_thread_pool_worker_t)lparam;
-			host = worker->thread_pool->hmod;
-
 			if(id == 1)
 			{
-				timer_stop(hmod, id);
+				worker = (object_thread_pool_worker_t)lparam;
+
+				if(worker->timeout == -1)	///<已经发生过超时
+					break;
+
+				debug(DEBUG, "worker '%s' task timeout!\n", object_name((object_t)worker));
+
+				host = worker->thread_pool->hmod;
 
 				ENTER_LOCK(&worker->lock);
 				worker->worker_state = TIMEOUT;
 				EXIT_LOCK(&worker->lock);
 
-				post_message(host, MSG_STATE, (WPARAM)-1, (LPARAM)worker->task);	///<返回结果给宿主
+				post_message(host, MSG_STATE, (WPARAM)1, (LPARAM)worker->task);	///<返回结果给宿主
+
+				worker->timeout = -1;
 			}
 		}
 			break;
@@ -44,6 +50,8 @@ static int thread_pool_worker_proc(HMOD hmod, int message, WPARAM wparam, LPARAM
 
 			worker = (object_thread_pool_worker_t)get_object_thread_add_data((object_thread_t)hmod);
 			host = worker->thread_pool->hmod;
+			
+			worker->timeout = timeout;
 
 			///<任务有超时时间
 			if(timeout > 0)
@@ -59,8 +67,9 @@ static int thread_pool_worker_proc(HMOD hmod, int message, WPARAM wparam, LPARAM
 			worker->task = task;
 			worker->task_func(task);	///<处理任务
 
+			///<处理完毕
 			ENTER_LOCK(&worker->lock);
-			if(worker->worker_state == TIMEOUT)	///<任务已经超时了，MSG_TIMER已经反馈结果
+			if(worker->worker_state == TIMEOUT)	///<任务已经超时了，已经反馈结果
 				worker->worker_state = IDLE;
 			else
 			{
@@ -79,21 +88,53 @@ static int thread_pool_worker_proc(HMOD hmod, int message, WPARAM wparam, LPARAM
 }
 
 
-int thread_pool_add_worker(object_t parent, task_func_t task_func)
+void thread_pool_info(void)
+{
+	debug(RELEASE, "==> thread poll writen by li zhixian @2015.08.15 ^.^ <==\n");
+}
+
+int thread_pool_init(object_t parent, int worker_num, HMOD hmod)
+{
+	int i;
+	object_thread_pool_t thread_pool;
+
+	thread_pool = (object_thread_pool_t)parent;
+	thread_pool->hmod = hmod;
+	object_container_init(&thread_pool->worker_container);
+
+	for(i = 0; i < worker_num; i++)
+		thread_pool_add_worker(&thread_pool->parent, thread_pool->task_func);
+
+	return 0;
+}
+
+object_thread_pool_worker_t thread_pool_add_worker(object_t parent, task_func_t task_func)
 {
 	object_thread_pool_t otp = NULL;
 	object_thread_pool_worker_t otpw = NULL;
+	int current_worker_num = 0;
 
 	otp = (object_thread_pool_t)parent;
 
+	current_worker_num = otp->worker_container.size;
+	if(current_worker_num >= otp->worker_max)	///<线程数量超限
+	{
+		debug(RELEASE, "The number of threads in thread pool overrun!\n");
+		return NULL;
+	}
+
 	///<申请一个worker
 	otpw = (object_thread_pool_worker_t)calloc(1, sizeof(struct object_thread_pool_worker));
-	assert(otpw);
+	if(otpw == NULL)
+	{
+		debug(RELEASE, "alloc memory failure!\n");
+		return otpw;
+	}
 
 	otpw->thread = new_object_thread(thread_pool_worker_proc);	///<申请一个thread对象
 	assert(otpw->thread);
 
-	sprintf(otpw->parent.name, "%8X", (unsigned int)otpw);
+	sprintf(otpw->parent.name, "%08X", (unsigned int)otpw);
 	otpw->task_func = task_func;
 	otpw->worker_state = IDLE;
 	otpw->thread_pool = otp;
@@ -107,7 +148,7 @@ int thread_pool_add_worker(object_t parent, task_func_t task_func)
 	///<启动worker
 	start_object_thread(otpw->thread);
 
-	return 0;
+	return otpw;
 }
 
 int thread_pool_remove_worker(object_t parent, object_thread_pool_worker_t worker)
@@ -149,34 +190,79 @@ object_thread_pool_worker_t thread_pool_get_idle_worker(object_t parent)
 
 	EXIT_LOCK(&container->lock);
 
+	if(worker == NULL)	///<没有找到空闲的线程
+		worker = thread_pool_add_worker(&otp->parent, otp->task_func);
+
 	return worker;
+}
+
+void thread_pool_state(object_t parent)
+{
+	object_thread_pool_t otp = NULL;
+	object_thread_pool_worker_t otpw = NULL;
+	struct object_information *container = NULL;
+	const char *state = NULL;
+
+	otp = (object_thread_pool_t)parent;
+	container = &otp->worker_container;
+
+	debug(RELEASE, "== tid\t\t\tmagic\t\tstate ==\n");
+
+	ENTER_LOCK(&container->lock);
+
+	CONTAINER_FOREACH(container, object_thread_pool_worker_t, otpw)
+		ENTER_LOCK(&otpw->lock);
+		switch (otpw->worker_state)
+		{
+			case IDLE:
+				state = "IDLE";
+				break;
+			case BUSY:
+				state = "BUSY";
+				break;
+			case TIMEOUT:
+				state = "TIMEOUT";
+				break;
+			default:
+				state = "UNKNOWN";
+				break;
+		}
+
+		EXIT_LOCK(&otpw->lock);
+
+		debug(RELEASE, "   %lu\t\t%s\t%s\n",
+			otpw->thread->tid,
+			object_name((object_t)otpw),
+			state);
+	CONTAINER_FOREACH_END
+	debug(RELEASE, "\n");
+
+	EXIT_LOCK(&container->lock);
 }
 
 int thread_pool_assigned_task(object_thread_pool_worker_t worker, void *task, int timeout)
 {
-	post_message((HMOD)worker->thread, MSG_COMMAND, (LPARAM)task, (WPARAM)timeout);
+	post_message((HMOD)worker->thread, MSG_COMMAND, (WPARAM)task, (LPARAM)timeout);
 
 	return 0;
 }
 
-object_thread_pool_t new_thread_pool(int worker_max, task_func_t task_func, HMOD hmod)
+object_thread_pool_t new_thread_pool(int worker_max, task_func_t task_func)
 {
-	int i;
 	object_thread_pool_t thread_pool;
 
 	thread_pool = (object_thread_pool_t)calloc(1, sizeof(struct object_thread_pool));
 	assert(thread_pool);
 
-	thread_pool->hmod = hmod;
+	thread_pool->worker_max		= worker_max;
+	thread_pool->task_func		= task_func;
 
-	object_container_init(&thread_pool->worker_container);
-
+	thread_pool->info			= thread_pool_info;
+	thread_pool->state			= thread_pool_state;
+	thread_pool->init			= thread_pool_init;
 	thread_pool->add_worker 	= thread_pool_add_worker;
 	thread_pool->remove_worker 	= thread_pool_remove_worker;
 	thread_pool->idle_worker 	= thread_pool_get_idle_worker;
-
-	for(i = 0; i < worker_max; i++)
-		thread_pool_add_worker(&thread_pool->parent, task_func);
 
 	return thread_pool;
 }

@@ -62,8 +62,6 @@ int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			}
 		}
 			break;
-		case MSG_COMMAND:
-			break;
 		case MSG_AIOERR:
 		case MSG_AIOBREAK:
 		{

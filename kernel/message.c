@@ -124,6 +124,8 @@ int get_message(HMOD hmod, msg_t pmsg)
 	
 	memset(pmsg, 0, sizeof(struct msg));
 	
+	ENTER_LOCK(&p->msgqueue.lock);
+
 	if(p->msgqueue.dw_data & QS_POSTMSG)
 	{
 		if(p->msgqueue.read_pos != p->msgqueue.write_pos)
@@ -134,11 +136,15 @@ int get_message(HMOD hmod, msg_t pmsg)
 			if(p->msgqueue.read_pos >= MSGQUEUE_MAX)
 				p->msgqueue.read_pos = 0;
 
+			EXIT_LOCK(&p->msgqueue.lock);
+
 			return 0;
 		}
 		else	///<已读完
 			p->msgqueue.dw_data &= ~QS_POSTMSG;
 	}
+
+	EXIT_LOCK(&p->msgqueue.lock);
 
 	///<no message to read
 	sem_wait(&p->msgqueue.wait);
