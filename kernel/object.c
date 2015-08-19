@@ -44,6 +44,36 @@ void object_container_init(struct object_information *container)
 	container->size = 0;
 }
 
+object_t object_container_first(struct object_information *container)
+{
+	list_t *node;
+	object_t p = NULL;
+
+	ENTER_LOCK(&container->lock);
+
+	node = container->list.next;
+	p = list_entry(node, struct object, list);
+
+	EXIT_LOCK(&container->lock);
+
+	return p;
+}
+
+object_t object_container_last(struct object_information *container)
+{
+	list_t *node;
+	object_t p = NULL;
+
+	ENTER_LOCK(&container->lock);
+
+	node = container->list.prev;;
+	p = list_entry(node, struct object, list);
+
+	EXIT_LOCK(&container->lock);
+
+	return p;
+}
+
 object_t object_container_find(const char *name, struct object_information *container)
 {
     int find_obj = 0;

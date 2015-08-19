@@ -66,5 +66,6 @@
 #include "io.h"
 #include "database.h"
 #include "thread_pool.h"
+#include "mem_pool.h"
 
 #endif

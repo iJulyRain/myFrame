@@ -90,7 +90,7 @@ static int thread_pool_worker_proc(HMOD hmod, int message, WPARAM wparam, LPARAM
 
 void thread_pool_info(void)
 {
-	debug(RELEASE, "==> thread poll writen by li zhixian @2015.08.15 ^.^ <==\n");
+	debug(RELEASE, "==> thread pool writen by li zhixian @2015.08.15 ^.^ <==\n");
 }
 
 int thread_pool_init(object_t parent, int worker_num, HMOD hmod)
@@ -103,7 +103,7 @@ int thread_pool_init(object_t parent, int worker_num, HMOD hmod)
 	object_container_init(&thread_pool->worker_container);
 
 	for(i = 0; i < worker_num; i++)
-		thread_pool_add_worker(&thread_pool->parent, thread_pool->task_func);
+		thread_pool->add_worker(&thread_pool->parent, thread_pool->task_func);
 
 	return 0;
 }
@@ -207,6 +207,7 @@ void thread_pool_state(object_t parent)
 	container = &otp->worker_container;
 
 	debug(RELEASE, "== tid\t\t\tmagic\t\tstate ==\n");
+	debug(RELEASE, "===============================================\n");
 
 	ENTER_LOCK(&container->lock);
 

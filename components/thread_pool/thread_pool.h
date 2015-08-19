@@ -53,21 +53,15 @@ struct object_thread_pool
 
 	void (*info)(void);
 	void (*state)(object_t parent);
-	int (*init)(object_t parent, int worker_max, HMOD hmod);
+	int (*init)(object_t parent, int worker_num, HMOD hmod);	///<线程池初始化，会预先创建worker_num个线程出来
 	object_thread_pool_worker_t (*add_worker)(object_t parent, task_func_t task_func);	///<新添加一个worker
 	int (*remove_worker)(object_t parent, object_thread_pool_worker_t worker);	///<移除一个worker
 	object_thread_pool_worker_t (*idle_worker)(object_t parent);	///<找一个空闲的worker
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-void thread_pool_info(void);
-int thread_pool_init(object_t parent, int worker_num,  HMOD hmod);
-object_thread_pool_worker_t thread_pool_add_worker(object_t parent, task_func_t task_func);
-int thread_pool_remove_worker(object_t parent, object_thread_pool_worker_t worker);
-object_thread_pool_worker_t thread_pool_get_idle_worker(object_t parent);
-void thread_pool_state(object_t parent);
-
 object_thread_pool_t new_thread_pool(int worker_max, task_func_t task_func);
+
 int thread_pool_assigned_task(object_thread_pool_worker_t worker, void *task, int timeout);
 
 #endif
