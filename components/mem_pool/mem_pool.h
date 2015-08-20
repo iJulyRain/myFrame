@@ -60,11 +60,12 @@ typedef struct object_mem_pool
 
 	///<内存池可以容纳德最大非规则空间 (4096 * max_free_index)
 	///<当用户层申请的空间大于max_free_index，在释放空间的时候
-	///<内存池直接将空间释放给OS，否则挂接到pool[0]侠
+	///<内存池直接将空间释放给OS，否则挂接到pool[0]
 	int max_free_index;
 
 	size_t total;	///<内存池目前总共管理的内存大小
 	size_t used;	///<目前在用的内存大小
+	size_t dirty;	///<浪费的空间
 
 	int boundary;
 

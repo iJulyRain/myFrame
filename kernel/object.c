@@ -164,6 +164,8 @@ void object_container_delete(object_t object, struct object_information *contain
 	list_remove(&object->list);
 
 	EXIT_LOCK(&container->lock);
+
+	container->size --;
 }
 
 /**
@@ -178,6 +180,28 @@ void object_delete(object_t object)
 	container = object_container + object->type; 
 
 	object_container_delete(object, container);
+}
+
+void object_insert_before(object_t n, object_t l, struct object_information *container)
+{
+	ENTER_LOCK(&container->lock);
+
+	list_insert_before(&l->list, &n->list);
+
+	EXIT_LOCK(&container->lock);
+
+	container->size ++;
+}
+
+void object_insert_after(object_t n, object_t l, struct object_information *container)
+{
+	ENTER_LOCK(&container->lock);
+
+	list_insert_after(&l->list, &n->list);
+
+	EXIT_LOCK(&container->lock);
+
+	container->size ++;
 }
 
 void object_set_name(object_t object, const char *name)
