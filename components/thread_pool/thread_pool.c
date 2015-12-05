@@ -36,7 +36,7 @@ static int thread_pool_worker_proc(HMOD hmod, int message, WPARAM wparam, LPARAM
 				worker->worker_state = TIMEOUT;
 				EXIT_LOCK(&worker->lock);
 
-				post_message(host, MSG_STATE, (WPARAM)1, (LPARAM)worker);	///<返回结果给宿主
+				post_message(host, MSG_STATE, (WPARAM)1, (LPARAM)worker->task);	///<返回结果给宿主
 
 				worker->timeout = -1;
 			}
@@ -83,7 +83,7 @@ static int thread_pool_worker_proc(HMOD hmod, int message, WPARAM wparam, LPARAM
 			else
 			{
 				worker->worker_state = IDLE;
-				post_message(host, MSG_STATE, (WPARAM)0, (LPARAM)worker);	///<返回结果给宿主
+				post_message(host, MSG_STATE, (WPARAM)0, (LPARAM)task);	///<返回结果给宿主
 			}
             worker->timeout_tick = 0;
 			EXIT_LOCK(&worker->lock);
