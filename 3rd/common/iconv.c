@@ -1,7 +1,7 @@
 #include "common.h"
 #include <iconv.h>
 
-static int code_convert(char *from_charset, char *to_charset, char *inbuf, size_t inlen, char *outbuf, size_t outlen)
+int code_convert(char *from_charset, char *to_charset, char *inbuf, size_t inlen, char *outbuf, size_t outlen)
 {
 	iconv_t cd;
 	char **pin = &inbuf;

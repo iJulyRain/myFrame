@@ -51,7 +51,7 @@ typedef struct object_io
 	//串口：COM1 9600,8n1
 	//TCP client/UDP client/TCP server/UDP server：192.168.1.100:10001
 	//unixdomain client: /tmp/myframe.socket
-	const char *settings;
+	char *settings;
 
 	void *addr;	///<网络IPC的地址信息
 
@@ -73,6 +73,7 @@ typedef struct object_io
 }*object_io_t;
 
 object_io_t new_object_io(const char *io_type, const char *alias);
+void free_object_io(object_io_t io);
 
 int io_getfd(object_t parent);
 int io_setfd(object_t parent, int fd);

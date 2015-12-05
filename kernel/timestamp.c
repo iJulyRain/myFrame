@@ -150,3 +150,11 @@ object_timestamp_t new_object_timestamp(void)
 
 	return tms;
 }
+
+void delete_object_timestamp(object_timestamp_t tms)
+{
+    if(!tms)
+        return;
+
+    free(tms);
+}

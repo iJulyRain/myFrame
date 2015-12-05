@@ -44,6 +44,11 @@ void object_container_init(struct object_information *container)
 	container->size = 0;
 }
 
+void object_container_deinit(struct object_information *container)
+{
+    DEL_LOCK(&container->lock);
+}
+
 object_t object_container_first(struct object_information *container)
 {
 	list_t *node;

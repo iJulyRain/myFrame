@@ -46,6 +46,8 @@
 #define TICK_PER_SECOND 10
 #define ONE_SECOND	TICK_PER_SECOND
 
+#define TIMERID_DEFAULT -1 
+
 enum
 {
 	mode_timer_relative = 1,
@@ -80,7 +82,7 @@ typedef struct object_timer
 	int mode;	///<定时器种类
 
 	HMOD hmod;	///<定时器归属
-	int id;		///<定时器编号
+	ULONG id;		///<定时器编号
 
 	int timeout_tick;	///<当前定时计数
 	int init_tick;	///<定时器超时时间
@@ -92,12 +94,12 @@ typedef struct object_timer
 	void *user_data;
 }*object_timer_t;
 
-void timer_add(HMOD hmod, int id, int init_tick, void *user_data, int type);
-void timer_add_abs(HMOD hmod, int id, const char *timestring, void *user_data, int type);
-void timer_remove(HMOD hmod, int id);
-void timer_start(HMOD hmod, int id);
-void timer_stop(HMOD hmod, int id);
-void timer_control(HMOD hmod, int id, int init_tick);
+void timer_add(HMOD hmod, ULONG id, int init_tick, void *user_data, int type);
+void timer_add_abs(HMOD hmod, ULONG id, const char *timestring, void *user_data, int type);
+void timer_remove(HMOD hmod, ULONG id);
+void timer_start(HMOD hmod, ULONG id);
+void timer_stop(HMOD hmod, ULONG id);
+void timer_control(HMOD hmod, ULONG id, int init_tick);
 
 void *thread_timer_entry(void *parameter);
 

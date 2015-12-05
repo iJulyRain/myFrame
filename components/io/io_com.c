@@ -229,7 +229,7 @@ static int com_init(object_t parent, HMOD hmod, const char *settings)
 
 	io->isconnect = OFFLINE;
 
-	io->buffer = buffer_create();
+	io->buffer = object_buffer_create();
 	io->event = poller_event_create(io);
 
 	object_container_addend(&io->parent, &this->io_container);	///<填充到线程的IO容器里面

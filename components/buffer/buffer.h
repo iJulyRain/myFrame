@@ -30,7 +30,9 @@ typedef struct object_buf
 }*object_buf_t;
 
 ////////////////////////////////////////////////////////////////////
-object_buf_t buffer_create(void);
+object_buf_t object_buffer_create(void);
+void object_buffer_free(object_buf_t buf);
+
 int buffer_add(buf_base_t buf, const char *buffer, size_t size);
 int buffer_remove(buf_base_t buf, char *buffer, size_t size);
 char *buffer_find(buf_base_t buf, const char *what, size_t size);

@@ -21,10 +21,10 @@ int log_init(void)
 {
 	int rc;
 
-	rc = dzlog_init("config/log.ini", "category");
+	rc = dzlog_init("log.ini", "category");
 	if(rc)
 	{
-		printf("Can't load Log Config file 'config/log.ini'\n");
+		printf("Can't load Log Config file 'log.ini'\n");
 		return -1;
 	}
 

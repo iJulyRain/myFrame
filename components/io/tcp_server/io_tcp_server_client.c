@@ -52,7 +52,7 @@ static int tcp_server_client_init(object_t parent, HMOD hmod, const char *settin
 
 	io->isconnect = OFFLINE;
 
-	io->buffer = buffer_create();
+	io->buffer = object_buffer_create();
 	io->event = poller_event_create(io);
 
 	return 0;

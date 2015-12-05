@@ -18,7 +18,7 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
-#define OBJ_NAME_MAX	32
+#define OBJ_NAME_MAX    64	
 
 #define MSGQUEUE_MAX	16
 

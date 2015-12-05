@@ -39,7 +39,7 @@ typedef struct object_thread
 	void *(*entry)(void *);	///<线程入口
 	thread_proc_t thread_proc;	///<线程处理函数
 
-	DWORD add_data;	///<附加参数
+	ULONG add_data;	///<附加参数
 	struct object_information io_container;	///<线程管理的IO容器
 
 	struct msgqueue msgqueue;	///<消息队列
@@ -49,9 +49,10 @@ void *thread_entry(void *parameter);
 int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam);
 
 object_thread_t new_object_thread(thread_proc_t thread_proc); 
+void free_object_thread(object_thread_t ot);
 int start_object_thread(object_thread_t ot);
 int kill_object_thread(object_thread_t ot);
-void set_object_thread_add_data(object_thread_t ot, DWORD add_data);
-DWORD get_object_thread_add_data(object_thread_t ot);
+void set_object_thread_add_data(object_thread_t ot, ULONG add_data);
+ULONG get_object_thread_add_data(object_thread_t ot);
 
 #endif

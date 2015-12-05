@@ -33,6 +33,7 @@ struct object_thread_pool_worker
 	 *	> 0 超时时长
 	 */
 	int timeout;	///<任务超时时长 单位秒
+    int timeout_tick;   ///<任务使用的时长
 	int worker_state;	///<worker状态
 
 	pthread_mutex_t lock;

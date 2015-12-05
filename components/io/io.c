@@ -44,6 +44,26 @@ object_io_t new_object_io(const char *io_type, const char *alias)
 	return io;
 }
 
+void free_object_io(object_io_t io) 
+{
+    if(!io)
+        return;
+
+    if(io->settings)
+        free(io->settings);
+
+    if(io->addr)
+        free(io->addr);
+
+    if(io->buffer)
+        object_buffer_free(io->buffer);
+
+    if(io->event)
+        poller_event_release(io->event);
+
+    free(io);
+}
+
 int io_getfd(object_t parent) 
 {
 	object_io_t io;

@@ -63,6 +63,7 @@ struct object_information
 
 void global_container_init(void);
 void object_container_init(struct object_information *container);
+void object_container_deinit(struct object_information *container);
 object_t object_container_first(struct object_information *container);
 object_t object_container_last(struct object_information *container);
 object_t object_container_find(const char *name, struct object_information *container);
@@ -87,6 +88,8 @@ int object_type(object_t object);
 
 #define CONTAINER_FOREACH_END	}
 
+#define CONTAINER_FOREACH_RESET(container) node = container->list.next;continue; 
+
 #define OBJECT_FOREACH(type, T, pt) \
 	list_t *node;\
 	for(node = object_container[type].list.next; \
@@ -96,5 +99,7 @@ int object_type(object_t object);
 		pt = (T)list_entry(node, struct object, list);
 
 #define OBJECT_FOREACH_END	}
+
+#define OBJECT_FOREACH_RESET(type) node = object_container[type].list.next;continue;
 
 #endif

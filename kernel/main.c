@@ -24,6 +24,10 @@ int main(int argc, char **argv)
 
 	fprintf(stdout, "version: %s build: %s %s @%s\n", VERSION, __DATE__, __TIME__, who(WHO));
 
+#ifdef DAEMON_MODE
+	daemon(1, 0);
+#endif
+
 	if((step = init(argc, argv)) != 0)
 	{
 		debug(RELEASE, "system initialize failed ont step: %d!\n", abs(step));

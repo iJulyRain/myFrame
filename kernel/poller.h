@@ -2,6 +2,7 @@
 #define __POLLER_H__
 
 #include "def.h"
+#include "types.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -9,7 +10,7 @@
 
 typedef struct poller_event
 {
-	int magic;
+	ULONG magic;
     struct pollfd fd; 
     void *ptr;
 }*poller_event_t;
@@ -24,17 +25,17 @@ typedef struct poller
 
 /// poller event
 poller_event_t poller_event_create(void *ptr);
-void poller_event_relase(poller_event_t event);
+void poller_event_release(poller_event_t event);
 void poller_event_setfd(poller_event_t event, int fd);
 void poller_event_setev(poller_event_t event, int ev);
 void poller_event_clrev(poller_event_t event, int ev);
 
 /// poller
 int poller_create(int maxfds);
-int poller_add(int pfd, poller_event_t event);
-int poller_mod(int pfd, poller_event_t event);
-int poller_del(int pfd, poller_event_t event);
+int poller_add(long pfd, poller_event_t event);
+int poller_mod(long pfd, poller_event_t event);
+int poller_del(long pfd, poller_event_t event);
 
-int poller_wait(int pfd, struct poller_event *pv, int maxfds, int timeout);
+int poller_wait(long pfd, struct poller_event *pv, int maxfds, int timeout);
 
 #endif

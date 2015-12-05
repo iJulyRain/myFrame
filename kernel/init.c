@@ -38,16 +38,21 @@ static void sigvsig_handler(int s)
 	{
 		case SIGSEGV:
 			debug(RELEASE, "signal: SIGSEGV\n");
+            exit(1);
 			break;
 		case SIGTERM:
-			debug(RELEASE, "signal: SIGTERM\n");
+			debug(RELEASE, "(%lu)signal: SIGTERM\n", pthread_self());
+            pthread_exit(NULL);
+			break;
+		case SIGKILL:
+			debug(RELEASE, "signal: SIGINT\n");
+            exit(1);
 			break;
 		case SIGINT:
 			debug(RELEASE, "signal: SIGINT\n");
+            exit(1);
 			break;
 	}
-
-	exit(1);
 }
 
 /**
@@ -56,6 +61,7 @@ static void sigvsig_handler(int s)
 static void install_sighandler(void)
 {
 	signal(SIGSEGV, sigvsig_handler);
+	signal(SIGKILL,  sigvsig_handler);
 	signal(SIGTERM, sigvsig_handler);
 	signal(SIGINT,  sigvsig_handler);
 

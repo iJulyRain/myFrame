@@ -26,7 +26,7 @@ extern struct object_information object_container[object_class_type_unknown];
 * @param id 定时器ID
 * @param init_tick 定时器初始计数
 */
-void timer_add(HMOD hmod, int id, int init_tick, void *user_data, int type)
+void timer_add(HMOD hmod, ULONG id, int init_tick, void *user_data, int type)
 {
 	char name[OBJ_NAME_MAX];
 	object_timer_t pt = NULL;
@@ -43,7 +43,7 @@ void timer_add(HMOD hmod, int id, int init_tick, void *user_data, int type)
 	pt->user_data = user_data;
 
 	memset(name, 0, OBJ_NAME_MAX);
-	sprintf(name, "%08X:%02d", hmod, id);
+	sprintf(name, "%016lX:%016lX", hmod, id);
 	
 	object_addend(&pt->parent, name, object_class_type_timer);
 }
@@ -130,7 +130,7 @@ static void parse_timestring(const char *timestring, timerpoint_t tp)
 	}
 }
 
-void timer_add_abs(HMOD hmod, int id, const char *timestring, void *user_data, int type)
+void timer_add_abs(HMOD hmod, ULONG id, const char *timestring, void *user_data, int type)
 {
 	char name[OBJ_NAME_MAX];
 
@@ -152,7 +152,7 @@ void timer_add_abs(HMOD hmod, int id, const char *timestring, void *user_data, i
 	pt->user_data = user_data;
 
 	memset(name, 0, OBJ_NAME_MAX);
-	sprintf(name, "%08X:%02d", hmod, id);
+	sprintf(name, "%016lX:%016lX", hmod, id);
 	
 	object_addend(&pt->parent, name, object_class_type_timer);
 }
@@ -163,13 +163,13 @@ void timer_add_abs(HMOD hmod, int id, const char *timestring, void *user_data, i
 * @param hmod 安装定时器的线程句柄
 * @param id 定时器ID
 */
-void timer_remove(HMOD hmod, int id)
+void timer_remove(HMOD hmod, ULONG id)
 {
 	char name[OBJ_NAME_MAX];
 	object_t po;
 
 	memset(name, 0, OBJ_NAME_MAX);
-	sprintf(name, "%08X:%02d", hmod, id);
+	sprintf(name, "%016lX:%016lX", hmod, id);
 
 	po = object_find(name, object_class_type_timer);
 	if(po == NULL)
@@ -186,14 +186,14 @@ void timer_remove(HMOD hmod, int id)
 * @param hmod 安装定时器的线程句柄
 * @param id 定时器ID
 */
-void timer_start(HMOD hmod, int id)
+void timer_start(HMOD hmod, ULONG id)
 {
 	char name[OBJ_NAME_MAX];
 	object_t p;
 	object_timer_t pt;
 
 	memset(name, 0, OBJ_NAME_MAX);
-	sprintf(name, "%08X:%02d", hmod, id);
+	sprintf(name, "%016lX:%016lX", hmod, id);
 
 	p = object_find(name, object_class_type_timer);
 	if(p == NULL)
@@ -209,14 +209,14 @@ void timer_start(HMOD hmod, int id)
 * @param hmod 安装定时器的线程句柄
 * @param id 定时器ID
 */
-void timer_stop(HMOD hmod, int id)
+void timer_stop(HMOD hmod, ULONG id)
 {
 	char name[OBJ_NAME_MAX];
 	object_t p;
 	object_timer_t pt;
 
 	memset(name, 0, OBJ_NAME_MAX);
-	sprintf(name, "%08X:%02d", hmod, id);
+	sprintf(name, "%016lX:%016lX", hmod, id);
 
 	p = object_find(name, object_class_type_timer);
 	if(p == NULL)
@@ -233,14 +233,14 @@ void timer_stop(HMOD hmod, int id)
 * @param id 定时器ID
 * @param init_tick 定时器初始计数
 */
-void timer_control(HMOD hmod, int id, int init_tick)
+void timer_control(HMOD hmod, ULONG id, int init_tick)
 {
 	char name[OBJ_NAME_MAX];
 	object_t p;
 	object_timer_t pt;
 
 	memset(name, 0, OBJ_NAME_MAX);
-	sprintf(name, "%08X:%02d", hmod, id);	///<定时器命名方式：地址+ID
+	sprintf(name, "%016lX:%016lX", hmod, id);	///<定时器命名方式：地址+ID
 
 	p = object_find(name, object_class_type_timer);
 	if(p == NULL)

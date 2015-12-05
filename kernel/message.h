@@ -82,7 +82,7 @@ typedef struct msg
 */
 typedef struct msgqueue
 {
-	DWORD dw_data;
+	UINT dw_data;
 
 	int read_pos;
 	int write_pos;

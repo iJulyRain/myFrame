@@ -18,12 +18,15 @@
 #ifndef __TIMESTAMP_H__
 #define __TIMESTAMP_H__
 
+//#define _XOPEN_SOURCE
+
 #include "object.h"
 #include "print.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <time.h>
 
 #define ONE_MINUTE	60
 #define ONE_HOUR	60 * ONE_MINUTE
@@ -60,5 +63,6 @@ typedef struct object_timestamp
 }*object_timestamp_t;
 
 object_timestamp_t new_object_timestamp(void); 
+void delete_object_timestamp(object_timestamp_t);
 
 #endif

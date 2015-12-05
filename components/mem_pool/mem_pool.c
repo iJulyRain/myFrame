@@ -74,7 +74,7 @@ static void *mem_pool_alloc(object_t parent, size_t size)
 		assert(mem_block);
 
 		mem_block->mem_node = NULL;	///<不属于任何mem_node
-		mem_block->space = malloc(size + sizeof(void **)); ///<头4字节用于存放space的地址
+		mem_block->space = malloc(size + sizeof(void *)); ///<头sizeof(void *)字节用于存放space的地址
 
 		if(mem_block->space == NULL)
 		{
@@ -87,7 +87,7 @@ static void *mem_pool_alloc(object_t parent, size_t size)
 			mem_block->avail = size;	///<全部使用
 
 			addr = &mem_block->space; 
-			memcpy(mem_block->space, &addr, sizeof(void **));
+			memcpy(mem_block->space, &addr, sizeof(void *));
 		}
 	}
 	else if(index > mem_pool->max_index)	///<大内存，但内存池可以容纳，挂接到pool[0]中
@@ -121,7 +121,7 @@ static void *mem_pool_alloc(object_t parent, size_t size)
 			assert(mem_block);
 
 			mem_block->mem_node = mem_node;
-			mem_block->space = malloc(size + sizeof(void **)); 
+			mem_block->space = malloc(size + sizeof(void *)); 
 			if(mem_block->space == NULL)
 			{
 				mem_block->size = 0;
@@ -133,7 +133,7 @@ static void *mem_pool_alloc(object_t parent, size_t size)
 				mem_block->avail = size;
 
 				addr = &mem_block->space; 
-				memcpy(mem_block->space, &addr, sizeof(void **));
+				memcpy(mem_block->space, &addr, sizeof(void *));
 			}
 
 			///<加入used_list
@@ -166,7 +166,7 @@ static void *mem_pool_alloc(object_t parent, size_t size)
 			assert(mem_block);
 
 			mem_block->mem_node = mem_node;
-			mem_block->space = malloc(size + sizeof(void **)); 
+			mem_block->space = malloc(size + sizeof(void *)); 
 
 			if(mem_block->space == NULL)
 			{
@@ -179,7 +179,7 @@ static void *mem_pool_alloc(object_t parent, size_t size)
 				mem_block->avail = size;
 
 				addr = &mem_block->space; 
-				memcpy(mem_block->space, &addr, sizeof(void **));
+				memcpy(mem_block->space, &addr, sizeof(void *));
 			}
 
 			///<加入used_list
@@ -194,7 +194,7 @@ static void *mem_pool_alloc(object_t parent, size_t size)
 
 	EXIT_LOCK(&mem_pool->lock);
 
-	return mem_block->space + sizeof(void **);
+	return mem_block->space + sizeof(void *);
 }
 
 static void mem_pool_free(object_t parent, void *ptr)
@@ -207,7 +207,7 @@ static void mem_pool_free(object_t parent, void *ptr)
 	if(!ptr)
 		return;	///<不伺候
 
-	memcpy(&space, ptr - sizeof(void **), sizeof(void **));
+	memcpy(&space, ptr - sizeof(void *), sizeof(void *));
 
 	mem_pool = (object_mem_pool_t)parent;
 	mem_block = list_entry(space, struct object_mem_block, space); 
@@ -280,7 +280,7 @@ static void mem_pool_state(object_t parent)
 	debug(RELEASE, "max_free_index: %d\n", mem_pool->max_free_index);
 	debug(RELEASE, "boundary: 		%d\n", mem_pool->boundary);
 	debug(RELEASE, "\n");
-	debug(RELEASE, "total: %d | used: %d | dirty: %d (KB)\n", 
+	debug(RELEASE, "total: %zd | used: %zd | dirty: %zd (KB)\n", 
 			mem_pool->total, mem_pool->used, mem_pool->dirty);
 	debug(RELEASE, "============================================\n");
 	for(i = 0; i <= mem_pool->max_index; i++)

@@ -1,13 +1,13 @@
 #include "poller.h"
 
-static int poller_id;
+static ULONG poller_id;
 
 int poller_create(int maxfds)
 {
     int i;
-    struct poller *poller;
+    poller_t poller;
 
-    poller = (struct poller *)calloc(1, sizeof(struct poller));
+    poller = (poller_t)calloc(1, sizeof(struct poller));
     if(poller == NULL)
         return -1;
     
@@ -24,20 +24,20 @@ int poller_create(int maxfds)
         poller->ev_list[i].magic = 0;
 	}
 
-	poller_id = (int)poller;
+	poller_id = (ULONG)poller;
     
-    return (poller == NULL) ? -1 : (int)poller; 
+    return (poller == NULL) ? -1 : (long)poller; 
 }
 
-int poller_add(int pfd, poller_event_t event)
+int poller_add(long pfd, poller_event_t event)
 {
     int i;
-    struct poller *poller;
+    poller_t poller;
 
 	if(pfd == 0)
 		poller = (poller_t)poller_id;
 	else
-		poller = (struct poller *)pfd;
+		poller = (poller_t)pfd;
 
 	ENTER_LOCK(&poller->lock);
 
@@ -55,15 +55,15 @@ int poller_add(int pfd, poller_event_t event)
 	return 0;
 }
 
-int poller_mod(int pfd, poller_event_t event)
+int poller_mod(long pfd, poller_event_t event)
 {
 	int i;
-	struct poller *poller;
+	poller_t poller;
 
 	if(pfd == 0)
 		poller = (poller_t)poller_id;
 	else
-		poller = (struct poller *)pfd;
+		poller = (poller_t)pfd;
 
 	ENTER_LOCK(&poller->lock);
 
@@ -82,15 +82,15 @@ int poller_mod(int pfd, poller_event_t event)
 	return 0;
 }
 
-int poller_del(int pfd, poller_event_t event)
+int poller_del(long pfd, poller_event_t event)
 {
     int i;
-    struct poller *poller;
+    poller_t poller;
 
 	if(pfd == 0)
 		poller = (poller_t)poller_id;
 	else
-		poller = (struct poller *)pfd;
+		poller = (poller_t)pfd;
 
 	ENTER_LOCK(&poller->lock);
 
@@ -111,15 +111,15 @@ int poller_del(int pfd, poller_event_t event)
 	return 0;
 }
 
-int poller_wait(int pfd, struct poller_event *ev, int maxfds, int timeout)
+int poller_wait(long pfd, struct poller_event *ev, int maxfds, int timeout)
 {
     int i, nfds;
-    struct poller *poller;
+    poller_t poller;
 
 	if(pfd == 0)
 		poller = (poller_t)poller_id;
 	else
-		poller = (struct poller *)pfd;
+		poller = (poller_t)pfd;
 
     struct pollfd fds[poller->maxfds];
 	memset(fds, 0, sizeof(struct pollfd) * poller->maxfds);
@@ -165,7 +165,7 @@ poller_event_t poller_event_create(void *ptr)
 	if(event == NULL)
 		return event;
 
-	event->magic = (int)event;
+	event->magic = (long)event;
 	event->fd.fd = -1;
 	event->fd.events |= POLLIN;
 	event->fd.events |= POLLERR | POLLNVAL;
@@ -174,7 +174,7 @@ poller_event_t poller_event_create(void *ptr)
 	return event;
 }
 
-void poller_event_relase(poller_event_t event)
+void poller_event_release(poller_event_t event)
 {
 	free(event);
 }

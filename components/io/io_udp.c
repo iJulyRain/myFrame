@@ -54,7 +54,7 @@ static int udp_init(object_t parent, HMOD hmod, const char *settings)
 
 	io->isconnect = OFFLINE;
 
-	io->buffer = buffer_create();
+	io->buffer = object_buffer_create();
 	io->event = poller_event_create(io);
 
 	object_container_addend(&io->parent, &this->io_container);	///<填充到线程的IO容器里面
@@ -65,10 +65,8 @@ static int udp_init(object_t parent, HMOD hmod, const char *settings)
 static int udp_connect(object_t parent)
 {
 	object_io_t io;
-	struct sockaddr_in *addr;
 
 	io = (object_io_t)parent;
-	addr = io->addr;
 
 	io->fd = socket(AF_INET, SOCK_DGRAM, 0);
 	assert(io->fd > 0);

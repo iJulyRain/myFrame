@@ -35,7 +35,15 @@ int log_init(void);
 		if(level == DEBUG) \
 			dzlog_debug(format, ##arg);\
 		else if(level == RELEASE)\
-			dzlog_info(format, ##arg);\
+			dzlog_error(format, ##arg);\
+	}
+
+#define vdebug(level, format, arg)	\
+	{	\
+		if(level == DEBUG) \
+			vdzlog_debug(format, arg);\
+		else if(level == RELEASE)\
+			vdzlog_error(format, arg);\
 	}
 
 #endif

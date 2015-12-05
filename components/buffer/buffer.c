@@ -17,21 +17,29 @@
  */
 #include "buffer.h"
 
-static void buf_base_init(buf_base_t buf)
+static void buf_base_init(buf_base_t bb)
 {
-	buf->size = BUFFER_SIZE; 
+	bb->size = BUFFER_SIZE; 
 
-	buf->buffer = (char *)calloc(BUFFER_SIZE, sizeof(char));
-	assert(buf->buffer);
+	bb->buffer = (char *)calloc(BUFFER_SIZE, sizeof(char));
+	assert(bb->buffer);
 
-	buf->read_pos = 0;
-	buf->write_pos = 0;
+	bb->read_pos = 0;
+	bb->write_pos = 0;
 
-	INIT_LOCK(&buf->lock);
+	INIT_LOCK(&bb->lock);
+}
+
+static void buf_base_deinit(buf_base_t bb)
+{
+    if(bb->buffer)
+       free(bb->buffer);
+
+    DEL_LOCK(&bb->lock);
 }
 
 ///<创建一个buffer对象
-object_buf_t buffer_create(void)
+object_buf_t object_buffer_create(void)
 {
 	object_buf_t ob;
 
@@ -42,6 +50,14 @@ object_buf_t buffer_create(void)
 	buf_base_init(&ob->write_buf);
 
 	return ob;
+}
+
+void object_buffer_free(object_buf_t buf)
+{
+	buf_base_deinit(&buf->read_buf);
+	buf_base_deinit(&buf->write_buf);
+
+    free(buf);
 }
 
 ///<添加size长度的buffer数据到缓冲区中

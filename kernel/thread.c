@@ -73,7 +73,22 @@ int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			break;
 		case MSG_TERM:
 		{
-			pthread_exit((void *)0);
+            object_thread_t this = (object_thread_t)hmod;
+            object_io_t client;
+            struct object_information *container;
+
+            container = &this->io_container;
+
+            CONTAINER_FOREACH(container, object_io_t, client)
+                if(client->_state((object_t)client) == ONLINE)
+                    client->_close((object_t)client);
+
+                object_container_delete((object_t)client, container);
+                free_object_io(client); 
+                CONTAINER_FOREACH_RESET(container); ///<与delete配合使用
+            CONTAINER_FOREACH_END
+
+            timer_remove(hmod, 0);
 		}
 			break;
 	}
@@ -87,6 +102,8 @@ void *thread_entry(void *parameter)
     HMOD hmod;
 
     hmod = (HMOD)parameter; 
+    
+//    pthread_detach(pthread_self());
 
     while(!get_message(hmod, &msg))
         dispatch_message(&msg);
@@ -113,6 +130,14 @@ object_thread_t new_object_thread(thread_proc_t thread_proc)
 	return ot;
 }
 
+void free_object_thread(object_thread_t ot)
+{
+    DEL_LOCK(&ot->msgqueue.lock);
+    sem_destroy(&ot->msgqueue.wait);
+
+    object_container_deinit(&ot->io_container);
+}
+
 int start_object_thread(object_thread_t ot)
 {
 	send_message((HMOD)ot, MSG_INIT, 0, 0);
@@ -122,17 +147,19 @@ int start_object_thread(object_thread_t ot)
 
 int kill_object_thread(object_thread_t ot)
 {
-	send_message((HMOD)ot, MSG_TERM, 0, 0);	///<释放线程中可能用到的资源，此处有雷
+	send_message((HMOD)ot, MSG_TERM, 0, 0);	///<释放线程中可能用到的资源
+
+    pthread_kill(ot->tid, SIGTERM);
 
 	return pthread_join(ot->tid, NULL);
 }
 
-void set_object_thread_add_data(object_thread_t ot, DWORD add_data)
+void set_object_thread_add_data(object_thread_t ot, ULONG add_data)
 {
 	ot->add_data = add_data;
 }
 
-DWORD get_object_thread_add_data(object_thread_t ot)
+ULONG get_object_thread_add_data(object_thread_t ot)
 {
 	return ot->add_data;
 }

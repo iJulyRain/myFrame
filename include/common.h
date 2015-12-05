@@ -42,9 +42,10 @@
 #include <sys/un.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <sys/wait.h>
 #include <arpa/inet.h>
 
-///<公告头文件
+///<公用头文件
 #include "config.h"
 #include "def.h"
 #include "types.h"

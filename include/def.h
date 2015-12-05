@@ -20,8 +20,13 @@
 
 #include <pthread.h>
 
+#ifndef TRUE
 #define TRUE		1
+#endif
+
+#ifndef FALSE
 #define FALSE		0
+#endif
 
 #define OFFLINE		0	
 #define ONLINE		1	
@@ -30,6 +35,7 @@
 #define NOW time(NULL)
 
 #define INIT_LOCK(lock) pthread_mutex_init(lock, NULL)
+#define DEL_LOCK(lock) pthread_mutex_destroy(lock)
 #define ENTER_LOCK(lock) pthread_mutex_lock(lock)
 #define EXIT_LOCK(lock) pthread_mutex_unlock(lock)
 

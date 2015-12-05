@@ -12,6 +12,7 @@ static int thread_pool_worker_proc(HMOD hmod, int message, WPARAM wparam, LPARAM
 			debug(DEBUG, "==> thread poll worker '%s' init\n", object_name((object_t)worker));
 
 			timer_add(hmod, 1, 0, worker, TIMER_SYNC); 
+			timer_add(hmod, 2, 1 * ONE_SECOND, worker, TIMER_SYNC); 
 		}
 			break;
 		case MSG_TIMER:
@@ -35,10 +36,15 @@ static int thread_pool_worker_proc(HMOD hmod, int message, WPARAM wparam, LPARAM
 				worker->worker_state = TIMEOUT;
 				EXIT_LOCK(&worker->lock);
 
-				post_message(host, MSG_STATE, (WPARAM)1, (LPARAM)worker->task);	///<返回结果给宿主
+				post_message(host, MSG_STATE, (WPARAM)1, (LPARAM)worker);	///<返回结果给宿主
 
 				worker->timeout = -1;
 			}
+            else if(id == 2)
+            {
+			    object_thread_pool_worker_t worker = (object_thread_pool_worker_t)lparam;
+                worker->timeout_tick ++;
+            }
 		}
 			break;
 		case MSG_COMMAND:
@@ -60,8 +66,11 @@ static int thread_pool_worker_proc(HMOD hmod, int message, WPARAM wparam, LPARAM
 				timer_start(hmod, 1);
 			}
 
+			timer_start(hmod, 2);
+
 			ENTER_LOCK(&worker->lock);
 			worker->worker_state = BUSY;
+            worker->timeout_tick = 0;
 			EXIT_LOCK(&worker->lock);
 
 			worker->task = task;
@@ -74,14 +83,23 @@ static int thread_pool_worker_proc(HMOD hmod, int message, WPARAM wparam, LPARAM
 			else
 			{
 				worker->worker_state = IDLE;
-				post_message(host, MSG_STATE, (WPARAM)0, (LPARAM)task);	///<返回结果给宿主
+				post_message(host, MSG_STATE, (WPARAM)0, (LPARAM)worker);	///<返回结果给宿主
 			}
+            worker->timeout_tick = 0;
 			EXIT_LOCK(&worker->lock);
 
 			if(timeout > 0)
 				timer_stop(hmod, 1);
+
+            timer_stop(hmod, 2);
 		}
 			break;
+        case MSG_TERM:
+        {
+            timer_remove(hmod, 1);
+            timer_remove(hmod, 2);
+        }
+            break;
 	}
 
 	return thread_default_process(hmod, message, wparam, lparam);
@@ -134,13 +152,13 @@ object_thread_pool_worker_t thread_pool_add_worker(object_t parent, task_func_t 
 	otpw->thread = new_object_thread(thread_pool_worker_proc);	///<申请一个thread对象
 	assert(otpw->thread);
 
-	sprintf(otpw->parent.name, "%08X", (unsigned int)otpw);
+	sprintf(otpw->parent.name, "%016lX", (ULONG)otpw);
 	otpw->task_func = task_func;
 	otpw->worker_state = IDLE;
 	otpw->thread_pool = otp;
 	INIT_LOCK(&otpw->lock);
 
-	set_object_thread_add_data(otpw->thread, (DWORD)otpw);
+	set_object_thread_add_data(otpw->thread, (ULONG)otpw);
 
 	///<加入到 thread_pool
 	object_container_addend(&otpw->parent, &otp->worker_container);
@@ -153,13 +171,15 @@ object_thread_pool_worker_t thread_pool_add_worker(object_t parent, task_func_t 
 
 int thread_pool_remove_worker(object_t parent, object_thread_pool_worker_t worker)
 {
-	object_thread_pool_t otp = NULL;
+	object_thread_pool_t thread_pool = NULL;
+	thread_pool = (object_thread_pool_t)parent;
 
-	otp = (object_thread_pool_t)parent;
+    free_object_thread(worker->thread);
+    DEL_LOCK(&worker->lock);
 
-	post_message((HMOD)worker->thread, MSG_TERM, 0, 0);	///<发送结束线程指令
+	object_container_delete(&worker->parent, &thread_pool->worker_container);	///<从链表钟移除
 
-	object_container_delete(&worker->parent, &otp->worker_container);	///<从链表钟移除
+    free(worker);
 
 	return 0;
 }
@@ -206,8 +226,8 @@ void thread_pool_state(object_t parent)
 	otp = (object_thread_pool_t)parent;
 	container = &otp->worker_container;
 
-	debug(RELEASE, "== tid\t\t\tmagic\t\tstate ==\n");
-	debug(RELEASE, "===============================================\n");
+	debug(DEBUG, "== tid\t\t\tmagic\t\t\tstate(run) ==\n");
+	debug(DEBUG, "============================================================\n");
 
 	ENTER_LOCK(&container->lock);
 
@@ -231,12 +251,13 @@ void thread_pool_state(object_t parent)
 
 		EXIT_LOCK(&otpw->lock);
 
-		debug(RELEASE, "   %lu\t\t%s\t%s\n",
+		debug(DEBUG, "   %lu\t%s\t%s(%d)\n",
 			otpw->thread->tid,
 			object_name((object_t)otpw),
-			state);
+			state,
+            otpw->timeout_tick);
 	CONTAINER_FOREACH_END
-	debug(RELEASE, "\n");
+	debug(DEBUG, "\n");
 
 	EXIT_LOCK(&container->lock);
 }
