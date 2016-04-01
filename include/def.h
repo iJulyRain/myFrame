@@ -20,13 +20,8 @@
 
 #include <pthread.h>
 
-#ifndef TRUE
-#define TRUE		1
-#endif
-
-#ifndef FALSE
-#define FALSE		0
-#endif
+//#define TRUE		1
+//#define FALSE		0
 
 #define OFFLINE		0	
 #define ONLINE		1	
