@@ -54,7 +54,10 @@ int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 							send_message(hmod, MSG_AIOCONN, 0, (LPARAM)client);
 						}
 						else if(client->_state((object_t)client) == OFFLINE)
+						{
 							client->_close((object_t)client);
+							send_message(hmod, MSG_AIOCONN, 0, (LPARAM)client);
+						}
 					}
 				CONTAINER_FOREACH_END
 
@@ -69,6 +72,21 @@ int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
 			poller_del(0,  client->event);
 			client->_close((object_t)client);
+			
+			if(client->mode == mode_tcp_server_client
+			|| client->mode & IO_REMOVE)
+			{
+				debug(DEBUG, "[%s] removed\n", object_name(&client->parent));
+
+				///<从容器中移除，但不释放。让poller去释放
+				object_thread_t this = (object_thread_t)hmod;
+				struct object_information *container;
+
+				container = &this->io_container;
+				object_container_delete((object_t)client, container);
+
+				free_object_io(client);
+			}
 		}
 			break;
 		case MSG_TERM:

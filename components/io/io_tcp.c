@@ -22,7 +22,7 @@
 
 static void tcp_info(void)
 {
-	debug(RELEASE, "==> AIO(tcp) writen by li zhixian @2015.06.01 ^.^ <==\n");
+//	debug(RELEASE, "==> AIO(tcp) writen by li zhixian @2015.06.01 ^.^ <==\n");
 }
 
 static int tcp_init(object_t parent, HMOD hmod, const char *settings)
@@ -90,7 +90,7 @@ static int tcp_connect(object_t parent)
 		else if(conn == 0)
 		{
 			io->isconnect = ONLINE;
-			debug(DEBUG, "==> 1 connect to '%s' success!\n", io->settings);
+			debug(DEBUG, "==> [%s] 1 connect to '%s' success!\n", object_name(&io->parent), io->settings);
 		}
 	}
 	else if(io->isconnect == CONNECTING)
@@ -107,17 +107,19 @@ static int tcp_connect(object_t parent)
 		rc = select(io->fd + 1, &fdr, &fdw, NULL, &tv);
 		if(rc <= 0)
 			io->isconnect = OFFLINE;
-
-		if(FD_ISSET(io->fd, &fdw))
+		else
 		{
-			elen = sizeof(e);
-			rc = getsockopt(io->fd, SOL_SOCKET, SO_ERROR, &e, &elen);
-			if(rc < 0 || e)
-				io->isconnect = OFFLINE;
-			else
+			if(FD_ISSET(io->fd, &fdw))
 			{
-				io->isconnect = ONLINE;
-				debug(DEBUG, "==> 2 connect to '%s' success!\n", io->settings);
+				elen = sizeof(e);
+				rc = getsockopt(io->fd, SOL_SOCKET, SO_ERROR, &e, &elen);
+				if(rc < 0 || e)
+					io->isconnect = OFFLINE;
+				else
+				{
+					io->isconnect = ONLINE;
+					debug(DEBUG, "==> [%s] 2 connect to '%s' success!\n", object_name(&io->parent), io->settings);
+				}
 			}
 		}
 	}

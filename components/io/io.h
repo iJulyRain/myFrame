@@ -32,6 +32,8 @@ enum
 	mode_uart
 };
 
+#define IO_REMOVE	0x10 
+
 /**
 * @brief IO接口对象
 * 目前支持
@@ -44,8 +46,9 @@ typedef struct object_io
 	HMOD hmod;
 
 	int fd;
-	int isconnect;	///<0 OFFLINE 1 ONLINE 2CONNECTIONG
+	int isconnect;	///<0 OFFLINE 1 ONLINE 2CONNECTIONG -1 REMOVE
 	int mode;	///<模式
+	pthread_mutex_t lock;
 
 	//配置信息(拷贝) 字符串型
 	//串口：COM1 9600,8n1
@@ -70,6 +73,8 @@ typedef struct object_io
 
 	int  (*_recv)	(object_t parent);	///<读缓冲
 	int  (*_send)	(object_t parent);	///<写缓冲
+
+	void *user_ptr;
 }*object_io_t;
 
 object_io_t new_object_io(const char *io_type, const char *alias);

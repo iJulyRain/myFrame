@@ -44,9 +44,15 @@ void loop(void)
 				if(rc == 0)	///<读到数据
 					send_message(io->hmod, MSG_AIOIN, 0, (LPARAM)io);	///<有读事件
 				else if(rc == -1)	///<链接断开（TCP/UDP）
+				{
 					send_message(io->hmod, MSG_AIOBREAK, 0, (LPARAM)io);	///<有读事件
+					continue;
+				}
 				else if(rc == -2)	///<读出错
+				{
 					send_message(io->hmod, MSG_AIOERR, 0, (LPARAM)io);	///<有读事件
+					continue;
+				}
 			}
 			if(ev[i].fd.revents & POLLOUT)	///<可写
 			{
@@ -54,15 +60,20 @@ void loop(void)
 				if(rc == 0)	///<发送完毕
 					send_message(io->hmod, MSG_AIOOUT, 0, (LPARAM)io);	///<写完成
 				else if(rc == -1)	///<写出错
+				{
 					send_message(io->hmod, MSG_AIOERR, 0, (LPARAM)io);	///<写完成
+					continue;
+				}
 			}
 			if(ev[i].fd.revents & POLLERR)	///<写出错
 			{
 				send_message(io->hmod, MSG_AIOERR, 0, (LPARAM)io);
+				continue;
 			}
 			if(ev[i].fd.revents & POLLNVAL)///<描述符被关闭
 			{
 				send_message(io->hmod, MSG_AIOBREAK, 0, (LPARAM)io);
+				continue;
 			}
 		}
 	}

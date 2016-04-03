@@ -22,7 +22,7 @@
 
 static void tcp_server_info(void)
 {
-	debug(RELEASE, "==> AIO(tcp server) writen by li zhixian @2015.06.13 ^.^ <==\n");
+//	debug(RELEASE, "==> AIO(tcp server) writen by li zhixian @2015.06.13 ^.^ <==\n");
 }
 
 static int tcp_server_init(object_t parent, HMOD hmod, const char *settings)
@@ -30,7 +30,7 @@ static int tcp_server_init(object_t parent, HMOD hmod, const char *settings)
 	object_io_t io;
 	struct sockaddr_in *addr;
 	char ip[16];
-	int port, backlog;
+	int port, backlog, option = 1;
 	object_thread_t this = (object_thread_t)hmod;
 
 	assert(settings);
@@ -54,6 +54,8 @@ static int tcp_server_init(object_t parent, HMOD hmod, const char *settings)
 
 	io->fd = socket(AF_INET, SOCK_STREAM, 0);
 	assert(io->fd > 0);
+
+	setsockopt(io->fd, SOL_SOCKET, SO_REUSEADDR, (void *)&option, sizeof(option));
 
 	bind(io->fd, (struct sockaddr *)addr, sizeof(struct sockaddr_in));
 	listen(io->fd, backlog);
@@ -138,6 +140,10 @@ static int tcp_server_recv(object_t parent)
 	client->_setfd(&client->parent, sd);
 	client->_init(&client->parent, io->hmod, settings); ///<与监听描述符同一个线程
 	object_container_addend(&client->parent, &this->io_container);
+
+	poller_event_setfd(client->event, sd);
+	poller_add(0,  client->event);
+	send_message(io->hmod, MSG_AIOCONN, 0, (LPARAM)client);
 
 	return 0; 
 }

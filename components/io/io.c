@@ -40,6 +40,8 @@ object_io_t new_object_io(const char *io_type, const char *alias)
 	*io = *iot;
 
 	strcpy(io->parent.name, alias);
+	io->user_ptr = NULL;
+	INIT_LOCK(&io->lock);
 
 	return io;
 }
@@ -60,6 +62,11 @@ void free_object_io(object_io_t io)
 
     if(io->event)
         poller_event_release(io->event);
+
+    if(io->user_ptr)
+		free(io->user_ptr);
+	
+	DEL_LOCK(&io->lock);
 
     free(io);
 }
@@ -97,8 +104,13 @@ void io_close(object_t parent)
 
 	io = (object_io_t)parent;
 
+	ENTER_LOCK(&io->lock);
+
 	io->isconnect = OFFLINE;
-	close(io->fd);
+	if (io->fd != -1)
+		close(io->fd);
+
+	EXIT_LOCK(&io->lock);
 
 	io->fd = -1;
 }
@@ -106,19 +118,25 @@ void io_close(object_t parent)
 int io_recv(object_t parent)
 {
 	int rxnum;
-	char readbuf[BUFFER_MAX];
+	char readbuf[BUFFER_SIZE];
 
 	object_io_t io;
 
 	io = (object_io_t)parent;
 
-	memset(readbuf, 0, sizeof(char) * BUFFER_MAX);
+	memset(readbuf, 0, sizeof(char) * BUFFER_SIZE);
 
-	rxnum = read(io->fd, readbuf, BUFFER_MAX);
+	rxnum = read(io->fd, readbuf, BUFFER_SIZE);
 	if(rxnum == 0)	///<链接断开
+	{
+		buffer_clear(&io->buffer->read_buf);
 		return -1;
+	}
 	else if(rxnum == -1)	///<读出错
+	{
+		buffer_clear(&io->buffer->read_buf);
 		return -2;
+	}
 	else	///<读到数据
 		buffer_add(&io->buffer->read_buf, readbuf, rxnum);
 
@@ -141,7 +159,10 @@ int io_send(object_t parent)
 
 		txnum = write(io->fd, sendbuf, bufsize);
 		if(txnum == -1 || txnum == 0)
+		{
+			buffer_clear(&io->buffer->write_buf);
 			return -1;
+		}
 		else if(txnum > 0)
 			buffer_remove(&io->buffer->write_buf, NULL, txnum);
 	}

@@ -44,7 +44,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			client = new_object_io_tcp("tcp client");
 			assert(client);
 			client->_info();
-			client->_init(&client->parent, hmod, "192.168.199.172:40001");
+			client->_init(&client->parent, hmod, "192.168.1.129:40001");
 			
 			timer_add(hmod, 1, 1 * ONE_SECOND, client, TIMER_ASYNC);
 		}

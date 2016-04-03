@@ -22,9 +22,9 @@
 
 #define MSGQUEUE_MAX	16
 
-#define POLLER_MAX		20
+#define POLLER_MAX		512	
 
-#define BUFFER_SIZE		512	///<buffer初始长度/每次增加的长度
-#define BUFFER_MAX		2 * 1024
+#define BUFFER_SIZE		4096	
+#define BUFFER_MAX		1024 * 1024	
 
 #endif //__CONFIG_H__ 

@@ -101,8 +101,6 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			object_io_t io = (object_io_t)lparam;
 
 			debug(DEBUG, "==> client '%s'('%s')  break!\n", object_name((object_t)io), io->settings);
-
-			object_delete((object_t)io);
 		}
 			break;
 	}

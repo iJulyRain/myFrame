@@ -22,7 +22,7 @@
 
 static void udp_info(void)
 {
-	debug(RELEASE, "==> AIO(udp) writen by li zhixian @2015.06.01 ^.^ <==\n");
+//	debug(RELEASE, "==> AIO(udp) writen by li zhixian @2015.06.01 ^.^ <==\n");
 }
 
 static int udp_init(object_t parent, HMOD hmod, const char *settings)

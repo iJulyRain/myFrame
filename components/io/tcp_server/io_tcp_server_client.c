@@ -21,7 +21,7 @@
 
 static void tcp_server_client_info(void)
 {
-	debug(RELEASE, "==> AIO(tcp server client) writen by li zhixian @2015.06.13 ^.^ <==\n");
+//	debug(RELEASE, "==> AIO(tcp server client) writen by li zhixian @2015.06.13 ^.^ <==\n");
 }
 
 static int tcp_server_client_init(object_t parent, HMOD hmod, const char *settings)
@@ -50,7 +50,7 @@ static int tcp_server_client_init(object_t parent, HMOD hmod, const char *settin
 	addr->sin_addr.s_addr = inet_addr(ip);
 	addr->sin_port = htons(port);
 
-	io->isconnect = OFFLINE;
+	io->isconnect = ONLINE;
 
 	io->buffer = object_buffer_create();
 	io->event = poller_event_create(io);

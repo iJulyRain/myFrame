@@ -7,7 +7,7 @@ set(CMAKE_CXX_COMPILER g++)
 #add_definitions(-DDAEMON_MODE)
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-set(CMAKE_C_FLAGS "-Wall -g")
+set(CMAKE_C_FLAGS "-Wall -O2")
 
 
 include_directories(${PROJECT_SOURCE_DIR}/include
@@ -29,6 +29,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include
 					${PROJECT_SOURCE_DIR}/3rd/etpan/include
 					${PROJECT_SOURCE_DIR}/3rd/dovecot/lib
 					${PROJECT_SOURCE_DIR}/3rd/dovecot/
+					${PROJECT_SOURCE_DIR}/application/socks5/
 					)
 
 link_directories(
