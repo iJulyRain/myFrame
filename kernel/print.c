@@ -30,3 +30,18 @@ int log_init(void)
 
 	return 0;
 }
+/*
+int log_init(void) 
+{
+	return 0;
+}
+
+void debug(int level, const char *format, ...)
+{
+	va_list ap;
+
+	va_start(ap, format);
+	vprintf(format, ap);
+	va_end(ap);
+}
+*/

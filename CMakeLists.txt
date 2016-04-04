@@ -4,10 +4,11 @@ cmake_minimum_required(VERSION 2.8)
 
 set(CMAKE_C_COMPILER gcc)
 set(CMAKE_CXX_COMPILER g++)
+
 #add_definitions(-DDAEMON_MODE)
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-set(CMAKE_C_FLAGS "-Wall -O2")
+set(CMAKE_C_FLAGS "-Wall -O2 ")
 
 
 include_directories(${PROJECT_SOURCE_DIR}/include

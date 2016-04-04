@@ -43,7 +43,6 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			char name[32];
 			object_io_t client;
 
-			///<新建50个tcp client
 			for(i = 0; i < global_conf.ncon; i++)
 			{
 				memset(name, 0, sizeof(name));

@@ -30,6 +30,8 @@
 */
 int log_init(void);
 
+void debug(int level, const char *format, ...);
+
 #define debug(level, format, arg...)	\
 	{	\
 		if(level == DEBUG) \

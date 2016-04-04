@@ -96,7 +96,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			break;
 		case MSG_AIOOUT:
 		{
-			debug(DEBUG, "==> rssocks B sidt MSG_AIOOUT! <==\n")
+			debug(DEBUG, "==> rssocks B sidt MSG_AIOOUT! <==\n");
 		}
 			break;
 		case MSG_AIOERR:
