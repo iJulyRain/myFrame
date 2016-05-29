@@ -42,15 +42,17 @@ void loop(void)
 			{
 				rc = io->_recv(&io->parent);
 				if(rc == 0)	///<读到数据
-					send_message(io->hmod, MSG_AIOIN, 0, (LPARAM)io);	///<有读事件
+					post_message(io->hmod, MSG_AIOIN, 0, (LPARAM)io);	///<有读事件
 				else if(rc == -1)	///<链接断开（TCP/UDP）
 				{
-					send_message(io->hmod, MSG_AIOBREAK, 0, (LPARAM)io);	///<有读事件
+					poller_del(0, io->event);
+					post_message(io->hmod, MSG_AIOBREAK, 0, (LPARAM)io);	///<断开
 					continue;
 				}
 				else if(rc == -2)	///<读出错
 				{
-					send_message(io->hmod, MSG_AIOERR, 0, (LPARAM)io);	///<有读事件
+					poller_del(0, io->event);
+					post_message(io->hmod, MSG_AIOERR, 0, (LPARAM)io);	///<出错
 					continue;
 				}
 			}
@@ -58,21 +60,24 @@ void loop(void)
 			{
 				rc = io->_send (&io->parent); 
 				if(rc == 0)	///<发送完毕
-					send_message(io->hmod, MSG_AIOOUT, 0, (LPARAM)io);	///<写完成
+					post_message(io->hmod, MSG_AIOOUT, 0, (LPARAM)io);	///<写完成
 				else if(rc == -1)	///<写出错
 				{
-					send_message(io->hmod, MSG_AIOERR, 0, (LPARAM)io);	///<写完成
+					poller_del(0, io->event);
+					post_message(io->hmod, MSG_AIOERR, 0, (LPARAM)io);	///<出错
 					continue;
 				}
 			}
-			if(ev[i].fd.revents & POLLERR)	///<写出错
+			if(ev[i].fd.revents & POLLERR)	///<出错
 			{
-				send_message(io->hmod, MSG_AIOERR, 0, (LPARAM)io);
+				poller_del(0, io->event);
+				post_message(io->hmod, MSG_AIOERR, 0, (LPARAM)io);
 				continue;
 			}
 			if(ev[i].fd.revents & POLLNVAL)///<描述符被关闭
 			{
-				send_message(io->hmod, MSG_AIOBREAK, 0, (LPARAM)io);
+				poller_del(0, io->event);
+				post_message(io->hmod, MSG_AIOBREAK, 0, (LPARAM)io);
 				continue;
 			}
 		}
