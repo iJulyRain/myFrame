@@ -37,9 +37,7 @@ void global_container_init(void)
 void object_container_init(struct object_information *container)
 {
 	INIT_LOCK(&container->lock);
-
-	container->list.prev = &container->list;
-	container->list.next = &container->list;
+    list_init(&container->list);
 
 	container->size = 0;
 }

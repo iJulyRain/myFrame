@@ -44,7 +44,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			client = new_object_io_tcp("tcp client");
 			assert(client);
 			client->_info();
-			client->_init(&client->parent, hmod, "192.168.1.129:40001");
+			client->_init(&client->parent, hmod, "192.168.40.113:40001");
 			
 			timer_add(hmod, 1, 1 * ONE_SECOND, client, TIMER_ASYNC);
 		}
@@ -72,7 +72,14 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 		{
 			object_io_t client = (object_io_t)lparam;
 
-			debug(DEBUG, "==> '%s' connect to '%s' success!\n", object_name((object_t)client), client->settings);
+            if (client->isconnect == ONLINE)
+            {
+			    debug(DEBUG, "==> '%s' connect to '%s' success!\n", object_name((object_t)client), client->settings);
+            }
+            else if (client->isconnect == OFFLINE)
+            {
+			    debug(DEBUG, "==> '%s' connect to '%s' failed!\n", object_name((object_t)client), client->settings);
+            }
 
 			timer_start(hmod, 1);
 		}
@@ -128,12 +135,5 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 */
 int register_thread_tcp_client(void)
 {
-    object_thread_t ot;
-
-    ot = new_object_thread(thread_proc); 
-	assert(ot);
-
-    object_addend(&ot->parent, NAME, object_class_type_thread);
-
-	return 0;
+    return create_thread(thread_proc, NAME, 0);
 }

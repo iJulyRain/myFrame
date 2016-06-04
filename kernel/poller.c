@@ -1,8 +1,6 @@
 #include "poller.h"
 
-static ULONG poller_id;
-
-int poller_create(int maxfds)
+ULONG poller_create(int maxfds)
 {
     int i;
     poller_t poller;
@@ -24,9 +22,21 @@ int poller_create(int maxfds)
         poller->ev_list[i].magic = 0;
 	}
 
-	poller_id = (ULONG)poller;
-    
     return (poller == NULL) ? -1 : (long)poller; 
+}
+
+void poller_destroy(long pfd)
+{
+    poller_t poller;
+
+	if(pfd == 0)
+		poller = (poller_t)poller_id;
+	else
+		poller = (poller_t)pfd;
+
+	DEL_LOCK(&poller->lock);
+    free(poller->ev_list);
+    free(poller);
 }
 
 int poller_add(long pfd, poller_event_t event)

@@ -74,6 +74,7 @@ target_link_libraries(myevent
     cjson
     base64
     sha1
+    md5
 	pthread dl m
 )
 

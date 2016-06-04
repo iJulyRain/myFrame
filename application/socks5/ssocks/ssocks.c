@@ -203,8 +203,9 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 							break;
 						}
 
-						char ip[4];
-						char port[2];
+						char ip[4] = {0};
+						char port[2] = {0};
+
 						if (buffer[3] == 0x03) //domain name
 						{
 							char domain[256];
@@ -238,8 +239,16 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
 						///<create tcp client
 						char settings[32];
+						struct sockaddr_in saddr;
+
+						memset(&saddr, 0, sizeof(struct sockaddr_in));
+						memcpy(&saddr.sin_addr.s_addr, ip, 4);
+                        uint16_t p = (port[0] << 8) | port[1];
+
 						memset(settings, 0, sizeof(settings));
-						sprintf(settings, "%s:%s", ip, port);
+						sprintf(settings, "%s:%d", inet_ntoa(saddr.sin_addr), p);
+
+                        debug(DEBUG, "==> connect to: %s\n", settings);
 
 						cio = new_object_io_tcp(settings);
 						assert(cio);
@@ -266,6 +275,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			}
 		}
 			break;
+        /*
 		case MSG_AIOERR:
 		case MSG_AIOBREAK:
 		{
@@ -282,6 +292,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			}
 		}
 			break;
+        */
 	}
 
 	return thread_default_process(hmod, message, wparam, lparam);

@@ -24,6 +24,12 @@ int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 	{
 		case MSG_INIT:
 		{
+            object_thread_t ot;
+
+            ot = (object_thread_t)hmod;
+            if (ot->attr & THREAD_USING_POLLER)
+                ot->poller = poller_create(POLLER_MAX);
+
 			///<用于定时重连
 			timer_add(hmod, 0, 1 * ONE_SECOND, NULL, TIMER_ASYNC);
 			timer_start(hmod, 0);
@@ -39,9 +45,13 @@ int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
 				object_thread_t this = (object_thread_t)hmod;
 				object_io_t client;
+                poller_t poller = NULL;
 				struct object_information *container;
 
 				container = &this->io_container;
+
+                if ((this->attr & THREAD_USING_POLLER) && this->poller)
+                    poller = this->poller;
 
 				CONTAINER_FOREACH(container, object_io_t, client)
 					if(client->_state((object_t)client) != ONLINE)
@@ -50,7 +60,7 @@ int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 						if(client->_state((object_t)client) == ONLINE)
 						{
 							poller_event_setfd(client->event, client->_getfd((object_t)client));
-							poller_add(0,  client->event);
+							poller_add(poller,  client->event);
 							send_message(hmod, MSG_AIOCONN, 0, (LPARAM)client);
 						}
 						else if(client->_state((object_t)client) == OFFLINE)
@@ -65,38 +75,9 @@ int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			}
 		}
 			break;
-		case MSG_AIOERR:
-		case MSG_AIOBREAK:
-		{
-			struct object_information *container;
 
-			object_io_t client = (object_io_t)lparam;
-
-			if (client->isconnect == ONLINE)
-				client->_close((object_t)client);
-
-			container = &((object_thread_t)hmod)->io_container;
-			object_container_delete((object_t)client, container);
-			free_object_io(client);
-		}
-			break;
 		case MSG_TERM:
 		{
-            object_thread_t this = (object_thread_t)hmod;
-            object_io_t client;
-            struct object_information *container;
-
-            container = &this->io_container;
-
-            CONTAINER_FOREACH(container, object_io_t, client)
-                if(client->_state((object_t)client) == ONLINE)
-                    client->_close((object_t)client);
-
-                object_container_delete((object_t)client, container);
-                free_object_io(client); 
-                CONTAINER_FOREACH_RESET(container); ///<与delete配合使用
-            CONTAINER_FOREACH_END
-
             timer_remove(hmod, 0);
 		}
 			break;
@@ -139,6 +120,20 @@ object_thread_t new_object_thread(thread_proc_t thread_proc)
 	return ot;
 }
 
+int create_thread(thread_proc_t thread_proc, const char *alias, ULONG thread_attr)
+{
+    object_thread_t ot;
+
+    ot = new_object_thread(thread_proc);
+    if (!ot)
+        return -1;
+    ot->attr = thread_attr;
+
+    object_addend(&ot->parent, alias, object_class_type_thread);
+
+    return 0;
+}
+
 void free_object_thread(object_thread_t ot)
 {
     DEL_LOCK(&ot->msgqueue.lock);
@@ -156,11 +151,37 @@ int start_object_thread(object_thread_t ot)
 
 int kill_object_thread(object_thread_t ot)
 {
+    object_io_t client;
+    struct object_information *container;
+
 	send_message((HMOD)ot, MSG_TERM, 0, 0);	///<释放线程中可能用到的资源
 
     pthread_kill(ot->tid, SIGTERM);
+	pthread_join(ot->tid, NULL);
 
-	return pthread_join(ot->tid, NULL);
+    container = &ot->io_container;
+
+    CONTAINER_FOREACH(container, object_io_t, client)
+        if(client->_state((object_t)client) == ONLINE)
+            client->_close((object_t)client);
+
+        object_container_delete((object_t)client, container);
+        free_object_io(client); 
+        CONTAINER_FOREACH_RESET(container); ///<与delete配合使用
+    CONTAINER_FOREACH_END
+
+    DEL_LOCK(&ot->msgqueue.lock);
+    sem_destroy(&ot->msgqueue.wait);
+
+    if ((ot->attr & THREAD_USING_POLLER) && ot->poller)
+    {
+        poller_destroy((long)ot->poller);
+        ot->poller = NULL;
+    }
+
+    free(ot);
+
+    return 0;
 }
 
 void set_object_thread_add_data(object_thread_t ot, ULONG add_data)

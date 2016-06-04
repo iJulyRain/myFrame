@@ -31,11 +31,14 @@ void poller_event_setev(poller_event_t event, int ev);
 void poller_event_clrev(poller_event_t event, int ev);
 
 /// poller
-int poller_create(int maxfds);
+ULONG poller_create(int maxfds);
+void poller_destroy(long pfd);
 int poller_add(long pfd, poller_event_t event);
 int poller_mod(long pfd, poller_event_t event);
 int poller_del(long pfd, poller_event_t event);
 
 int poller_wait(long pfd, struct poller_event *pv, int maxfds, int timeout);
+
+ULONG poller_id;
 
 #endif
