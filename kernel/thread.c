@@ -17,6 +17,7 @@
  */
 
 #include "thread.h"
+#include "loop.h"
 
 int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 {
@@ -28,7 +29,7 @@ int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
             ot = (object_thread_t)hmod;
             if (ot->attr & THREAD_USING_POLLER)
-                ot->poller = poller_create(POLLER_MAX);
+                ot->poller = (poller_t)poller_create(POLLER_MAX);
 
 			///<用于定时重连
 			timer_add(hmod, 0, 1 * ONE_SECOND, NULL, TIMER_ASYNC);
@@ -41,6 +42,7 @@ int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
 			if(id == 0)	///<connect
 			{
+				debug(DEBUG, "=> timer\n");
 				timer_stop(hmod, 0);
 
 				object_thread_t this = (object_thread_t)hmod;
@@ -50,8 +52,7 @@ int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
 				container = &this->io_container;
 
-                if ((this->attr & THREAD_USING_POLLER) && this->poller)
-                    poller = this->poller;
+                poller = this->poller;
 
 				CONTAINER_FOREACH(container, object_io_t, client)
 					if(client->_state((object_t)client) != ONLINE)
@@ -60,7 +61,7 @@ int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 						if(client->_state((object_t)client) == ONLINE)
 						{
 							poller_event_setfd(client->event, client->_getfd((object_t)client));
-							poller_add(poller,  client->event);
+							poller_add((long)poller,  client->event);
 							send_message(hmod, MSG_AIOCONN, 0, (LPARAM)client);
 						}
 						else if(client->_state((object_t)client) == OFFLINE)
@@ -75,7 +76,18 @@ int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			}
 		}
 			break;
+		case MSG_AIOERR:
+		case MSG_AIOBREAK:
+		{
+			object_io_t client = (object_io_t)lparam;
+			object_thread_t ot = (object_thread_t)hmod;
 
+			poller_del((long)ot->poller, client->event);
+
+			if (client->isconnect == ONLINE)
+				client->_close((object_t)client);
+		}
+			break;
 		case MSG_TERM:
 		{
             timer_remove(hmod, 0);
@@ -93,8 +105,6 @@ void *thread_entry(void *parameter)
 
     hmod = (HMOD)parameter; 
     
-//    pthread_detach(pthread_self());
-
     while(!get_message(hmod, &msg))
         dispatch_message(&msg);
 

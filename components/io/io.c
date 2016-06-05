@@ -16,6 +16,7 @@
  * =====================================================================================
  */
 #include "io.h"
+#include "thread.h"
 
 void register_all_io(void)
 {
@@ -148,8 +149,10 @@ int io_send(object_t parent)
 	int txnum, size, bufsize;
 	char sendbuf[BUFFER_SIZE];
 	object_io_t io;
+	object_thread_t ot;
 
 	io = (object_io_t)parent;
+	ot = (object_thread_t)io->hmod;
 
 	size = buffer_size(&io->buffer->write_buf); 
 	if(size > 0)
@@ -169,7 +172,7 @@ int io_send(object_t parent)
 	else if(size == 0)	///<发送完成
 	{
 		poller_event_clrev(io->event, POLLOUT);	
-		poller_mod(0, io->event);
+		poller_mod((long)ot->poller, io->event);
 
 		return 0;
 	}
@@ -181,14 +184,17 @@ int io_output(object_t parent, const char *buffer, int size)
 {
 	object_io_t io;
 	io = (object_io_t)parent;
+	object_thread_t ot;
 	int rc;
+
+	ot = (object_thread_t)io->hmod;
 
 	///<添加到缓冲区
 	rc = buffer_add(&io->buffer->write_buf, buffer, size);
 
 	///<使能写事件
 	poller_event_setev(io->event, POLLOUT);	
-	poller_mod(0, io->event);
+	poller_mod((long)ot->poller, io->event);
 
 	return rc;
 }

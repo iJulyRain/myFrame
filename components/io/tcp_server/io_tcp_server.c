@@ -142,7 +142,7 @@ static int tcp_server_recv(object_t parent)
 	object_container_addend(&client->parent, &this->io_container);
 
 	poller_event_setfd(client->event, sd);
-	poller_add(0,  client->event);
+	poller_add((long)this->poller,  client->event);
 	send_message(io->hmod, MSG_AIOCONN, 0, (LPARAM)client);
 
 	return 0; 
