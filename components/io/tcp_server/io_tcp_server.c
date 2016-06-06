@@ -40,6 +40,8 @@ static int tcp_server_init(object_t parent, HMOD hmod, const char *settings)
 	io->hmod = hmod;
 	io->mode = mode_tcp_server;
 
+	list_init(&io->client);
+
 	debug(DEBUG, "settings: %s\n", io->settings);
 
 	io->addr = (struct sockaddr_in *)calloc(1, sizeof(struct sockaddr_in));
@@ -139,6 +141,9 @@ static int tcp_server_recv(object_t parent)
 	client = new_object_io_tcp_server_client(settings);
 	client->_setfd(&client->parent, sd);
 	client->_init(&client->parent, io->hmod, settings); ///<与监听描述符同一个线程
+
+	list_insert_after(&io->client, &client->client);
+
 	object_container_addend(&client->parent, &this->io_container);
 
 	poller_event_setfd(client->event, sd);

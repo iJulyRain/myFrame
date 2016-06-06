@@ -49,6 +49,8 @@ typedef struct object_io
 	int fd;
 	int isconnect;	///<0 OFFLINE 1 ONLINE 2CONNECTIONG -1 REMOVE
 	int mode;	///<模式
+	list_t client; ///<server accept's clients
+
 	pthread_mutex_t lock;
 
 	//配置信息(拷贝) 字符串型
