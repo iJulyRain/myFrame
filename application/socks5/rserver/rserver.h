@@ -1,23 +1,22 @@
 /*
  * =====================================================================================
  *
- *       Filename:  rcsocks.h
+ *       Filename:  rserver.h
  *
- *    Description:  rcsocks header file
+ *    Description:  rserver header
  *
  *        Version:  1.0
- *        Created:  2016年04月02日 14时09分55秒
+ *        Created:  2016年06月23日 15时01分37秒
  *       Revision:  none
  *       Compiler:  gcc
  *
- *         Author:  lizhixian (g3), lizhixian@integritytech.com.cn
- *   Organization:  g3
+ *         Author:  lizhixian (group3), lizhixian@integritytech.com.cn
+ *   Organization:  
  *
  * =====================================================================================
  */
-
-#ifndef __RCSOCKS_H__
-#define __RCSOCKS_H__
+#ifndef __RSERVER_H__
+#define __RSERVER_H__
 
 #include "socks5.h"
 
@@ -28,15 +27,16 @@ enum socks_state
 	socks_state_stream
 };
 
-#define GET_IO	0x01
-#define RST_IO	0x02
-
 struct control_block
 {
 	int state;
 
-	object_io_t bind_io;
+	object_io_t io_bind;
 };
+
+
+#define GET_IO	0x01
+#define RST_IO	0x02
 
 struct global_conf
 {
@@ -44,7 +44,6 @@ struct global_conf
 	int reverse_port;
 }global_conf;
 
-int register_thread_rcsocks_a(void);
-int register_thread_rcsocks_b(void);
+int register_thread_rserver(void);
 
 #endif

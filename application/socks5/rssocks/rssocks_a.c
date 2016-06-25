@@ -37,8 +37,6 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 	{
 		case MSG_INIT:
 		{
-			debug(DEBUG, "### '%s'\tMSG_INIT\n", NAME);
-
 			int i;
 			char name[32];
 			object_io_t client;
@@ -48,13 +46,52 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 				memset(name, 0, sizeof(name));
 				snprintf(name, 31, "[%d] tcp client(A)", i);
 
-				client = new_object_io_tcp(name);
+				client = new_object_io_tcp(name, 0);
 				assert(client);
 				client->_info();
 				client->_init(&client->parent, hmod, global_conf.server);
 			}
+
+			timer_add(hmod, 1, 60 * ONE_SECOND, NULL, TIMER_ASYNC);
+			timer_start(hmod, 1);
 		}
 			break;
+        case MSG_TIMER:
+        {
+            int id = (int)wparam;
+
+            switch(id)
+            {
+                case 1:
+                {
+			        struct s_header s_header;
+                    char buffer[128];
+                    struct object_information *container;
+                    object_io_t client;
+
+                    object_thread_t this = (object_thread_t)hmod;
+
+                    memset(&s_header, 0, sizeof(struct s_header));
+                    s_header.magic = 0x55AA; 
+                    s_header.command = SOCK_HEART;
+
+                    memset(buffer, 0, sizeof(buffer));
+                    memcpy(buffer, &s_header, sizeof(struct s_header));
+                    
+                    container = &this->io_container;
+
+                    CONTAINER_FOREACH(container, object_io_t, client)
+                        if(client->_state(&client->parent) != ONLINE
+                        || client->mode == mode_tcp_server)
+                            continue;
+
+                        client->_output(&client->parent, buffer, sizeof(struct s_header));
+                    CONTAINER_FOREACH_END
+                }
+                    break;
+            }
+        }
+            break;
 		case MSG_AIOIN: //<data from rcsocks B side
 		{
 			debug(DEBUG, "==> MSG AIOIN!\n");
@@ -74,11 +111,11 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 					cnt++;
 			CONTAINER_FOREACH_END
 
-			debug(DEBUG, "==> client pool used %d\n", cnt);
+			debug(DEBUG, "==> client pool used %d/%d\n", cnt, global_conf.ncon);
 
 			client = (object_io_t)lparam;
 
-			memset(buffer, 0, BUFFER_MAX);
+            memset(buffer, 0, sizeof(buffer));
 			rxnum = client->_input(&client->parent, buffer, BUFFER_MAX, TRUE);
 			debug(DEBUG, "==> rxnum: %d bytes\n", rxnum);
 
@@ -130,7 +167,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 						ot = (object_thread_t)object_find("rssocks B", object_class_type_thread);
 						assert(ot);
 
-						client_stream = new_object_io_tcp(settings);
+						client_stream = new_object_io_tcp(settings, IO_ATTR_REMOVE);
 						assert(client_stream);
 
 						client->user_ptr = client_stream;
@@ -165,15 +202,15 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 					debug(DEBUG, "==> RST_IO\n");
 
 					object_io_t io = (object_io_t)lparam;
-					char buffer[BUFFER_MAX];
+					char buffer[128];
 					struct s_header s_header;
-
+                    
 					memset(&s_header, 0, sizeof(struct s_header));
-					memset(buffer, 0, sizeof(buffer));
 
 					s_header.magic = 0x55AA;
 					s_header.command = SOCK_BREAK;
 
+                    memset(buffer, 0, sizeof(buffer));
 					memcpy(buffer, &s_header, sizeof(struct s_header));
 
 					io->_output(&io->parent, buffer, sizeof(struct s_header));

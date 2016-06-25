@@ -22,7 +22,7 @@
 
 static void tcp_server_info(void)
 {
-//	debug(RELEASE, "==> AIO(tcp server) writen by li zhixian @2015.06.13 ^.^ <==\n");
+	debug(RELEASE, "==> AIO(tcp server) writen by li zhixian @2015.06.13 ^.^ <==\n");
 }
 
 static int tcp_server_init(object_t parent, HMOD hmod, const char *settings)
@@ -39,8 +39,6 @@ static int tcp_server_init(object_t parent, HMOD hmod, const char *settings)
 	io->settings = strdup(settings);
 	io->hmod = hmod;
 	io->mode = mode_tcp_server;
-
-	list_init(&io->client);
 
 	debug(DEBUG, "settings: %s\n", io->settings);
 
@@ -142,12 +140,13 @@ static int tcp_server_recv(object_t parent)
 	client->_setfd(&client->parent, sd);
 	client->_init(&client->parent, io->hmod, settings); ///<与监听描述符同一个线程
 
-	list_insert_after(&io->client, &client->client);
+    client->server = io;
 
-	object_container_addend(&client->parent, &this->io_container);
+	list_insert_after(&io->client, &client->client);
 
 	poller_event_setfd(client->event, sd);
 	poller_add((long)this->poller,  client->event);
+
 	send_message(io->hmod, MSG_AIOCONN, 0, (LPARAM)client);
 
 	return 0; 
@@ -180,5 +179,5 @@ void register_io_tcp_server(void)
 
 object_io_t new_object_io_tcp_server(const char *alias)
 {
-	return new_object_io(NAME, alias);
+	return new_object_io(NAME, alias, 0);
 }

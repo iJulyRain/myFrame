@@ -27,7 +27,7 @@ void register_all_io(void)
 	register_io_com();
 }
 
-object_io_t new_object_io(const char *io_type, const char *alias)
+object_io_t new_object_io(const char *io_type, const char *alias, int attr)
 {
 	object_io_t iot, io;
 
@@ -42,6 +42,10 @@ object_io_t new_object_io(const char *io_type, const char *alias)
 
 	strcpy(io->parent.name, alias);
 	io->user_ptr = NULL;
+    io->server = NULL;
+    io->attr = attr;
+
+    list_init(&io->client);
 	INIT_LOCK(&io->lock);
 
 	return io;
@@ -66,8 +70,6 @@ void free_object_io(object_io_t io)
 
     if(io->user_ptr)
 		free(io->user_ptr);
-	
-	DEL_LOCK(&io->lock);
 
     free(io);
 }

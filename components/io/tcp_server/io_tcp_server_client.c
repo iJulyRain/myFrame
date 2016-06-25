@@ -16,12 +16,13 @@
  * =====================================================================================
  */
 #include "io.h"
+#include "thread.h"
 
 #define NAME "io tcp server client"
 
 static void tcp_server_client_info(void)
 {
-//	debug(RELEASE, "==> AIO(tcp server client) writen by li zhixian @2015.06.13 ^.^ <==\n");
+	debug(RELEASE, "==> AIO(tcp server client) writen by li zhixian @2015.06.13 ^.^ <==\n");
 }
 
 static int tcp_server_client_init(object_t parent, HMOD hmod, const char *settings)
@@ -30,6 +31,7 @@ static int tcp_server_client_init(object_t parent, HMOD hmod, const char *settin
 	struct sockaddr_in *addr;
 	char ip[16];
 	int port;
+	object_thread_t this = (object_thread_t)hmod;
 
 	assert(settings);
 
@@ -54,6 +56,8 @@ static int tcp_server_client_init(object_t parent, HMOD hmod, const char *settin
 
 	io->buffer = object_buffer_create();
 	io->event = poller_event_create(io);
+
+	object_container_addend(&io->parent, &this->io_container);	///<填充到线程的IO容器里面
 
 	return 0;
 }
@@ -127,5 +131,5 @@ void register_io_tcp_server_client(void)
 
 object_io_t new_object_io_tcp_server_client(const char *alias)
 {
-	return new_object_io(NAME, alias);
+	return new_object_io(NAME, alias, IO_ATTR_REMOVE);
 }

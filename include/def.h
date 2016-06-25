@@ -23,11 +23,9 @@
 #define TRUE		1
 #define FALSE		0
 
-#define REMOVE		-1
-#define OFFLINE		0	
-#define ONLINE		1	
-#define CONNECTING	2
-
+#define OFFLINE		0x00	
+#define ONLINE		0x01	
+#define CONNECTING	0x02
 
 #define NOW time(NULL)
 

@@ -59,6 +59,8 @@
 
 #define MSG_STATE		0x0009
 
+#define MSG_AIOCLR      0x000A
+
 /*
  * brief Indicates a message has post
  */

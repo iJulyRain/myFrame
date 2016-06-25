@@ -148,7 +148,6 @@ int get_message(HMOD hmod, msg_t pmsg)
 	EXIT_LOCK(&p->msgqueue.lock);
 
 	///<no message to read
-	//sem_wait(&p->msgqueue.wait);
 	if ((p->attr & THREAD_USING_POLLER) && p->poller)
 		do_loop((long)p->poller, 10);
 	else

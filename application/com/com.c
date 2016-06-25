@@ -41,7 +41,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			object_io_t client;
 
 			///<新建一个com
-			client = new_object_io_com("com client");
+			client = new_object_io_com("com client", 0);
 			assert(client);
 			client->_info();
 			client->_init(&client->parent, hmod, "/dev/ttyS0 9600,8n1");

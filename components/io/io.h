@@ -33,7 +33,7 @@ enum
 	mode_uart
 };
 
-#define IO_REMOVE	0x10 
+#define IO_ATTR_REMOVE 0x0001 ///<remove if close
 
 /**
 * @brief IO接口对象
@@ -47,9 +47,15 @@ typedef struct object_io
 	HMOD hmod;
 
 	int fd;
-	int isconnect;	///<0 OFFLINE 1 ONLINE 2CONNECTIONG -1 REMOVE
+	int isconnect;	///<0 OFFLINE / 1 ONLINE / 2 CONNECTIONG
 	int mode;	///<模式
-	list_t client; ///<server accept's clients
+
+    int attr;
+    int remove; ///<remove from container
+
+    struct object_io *server; ///< only apply to tcp_server_client mode
+
+	list_t client; ///<server accept's clients, only apply to tcp_server mode
 
 	pthread_mutex_t lock;
 
@@ -80,7 +86,7 @@ typedef struct object_io
 	void *user_ptr;
 }*object_io_t;
 
-object_io_t new_object_io(const char *io_type, const char *alias);
+object_io_t new_object_io(const char *io_type, const char *alias, int attr);
 void free_object_io(object_io_t io);
 
 int io_getfd(object_t parent);
@@ -100,10 +106,10 @@ void register_io_com(void);
 
 void register_all_io(void);
 
-object_io_t new_object_io_tcp(const char *alias);
 object_io_t new_object_io_tcp_server(const char *alias);
 object_io_t new_object_io_tcp_server_client(const char *alias);
-object_io_t new_object_io_udp(const char *alias);
-object_io_t new_object_io_com(const char *alias);
+object_io_t new_object_io_tcp(const char *alias, int attr);
+object_io_t new_object_io_udp(const char *alias, int attr);
+object_io_t new_object_io_com(const char *alias, int attr);
 
 #endif

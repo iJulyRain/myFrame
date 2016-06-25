@@ -1,3 +1,4 @@
-add_subdirectory(rcsocks)
-add_subdirectory(rssocks)
-add_subdirectory(ssocks)
+add_subdirectory(rserver)
+add_subdirectory(rclient)
+
+add_executable(monitor monitor.c)

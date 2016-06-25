@@ -76,22 +76,28 @@ static int tcp_connect(object_t parent)
 	if(io->isconnect == OFFLINE)
 	{
 		io->fd = socket(AF_INET, SOCK_STREAM, 0);
-		assert(io->fd > 0);
-		fcntl(io->fd, F_SETFL, fcntl(io->fd, F_GETFL) | O_NONBLOCK);
+        if (io->fd == -1)
+        {
+			io->isconnect = OFFLINE;	///<出错
+        }
+        else
+        {
+            fcntl(io->fd, F_SETFL, fcntl(io->fd, F_GETFL) | O_NONBLOCK);
 
-		conn = connect(io->fd, (struct sockaddr *)io->addr, sizeof(struct sockaddr_in));
-		if(conn == -1)
-		{
-			if(errno == EINPROGRESS || errno == EINTR)
-				io->isconnect = CONNECTING;
-			else
-				io->isconnect = OFFLINE;	///<出错
-		}
-		else if(conn == 0)
-		{
-			io->isconnect = ONLINE;
-			debug(DEBUG, "==> [%s] 1 connect to '%s' success!\n", object_name(&io->parent), io->settings);
-		}
+            conn = connect(io->fd, (struct sockaddr *)io->addr, sizeof(struct sockaddr_in));
+            if(conn == -1)
+            {
+                if(errno == EINPROGRESS || errno == EINTR)
+                    io->isconnect = CONNECTING;
+                else
+                    io->isconnect = OFFLINE;	///<出错
+            }
+            else if(conn == 0)
+            {
+                io->isconnect = ONLINE;
+                debug(DEBUG, "==> [%s] 1 connect to '%s' success!\n", object_name(&io->parent), io->settings);
+            }
+        }
 	}
 	else if(io->isconnect == CONNECTING)
 	{
@@ -187,7 +193,7 @@ void register_io_tcp(void)
 	object_addend(&io.parent, NAME, object_class_type_io);
 }
 
-object_io_t new_object_io_tcp(const char *alias)
+object_io_t new_object_io_tcp(const char *alias, int attr)
 {
-	return new_object_io(NAME, alias);
+	return new_object_io(NAME, alias, attr);
 }

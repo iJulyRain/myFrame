@@ -98,7 +98,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			object_io_t io = (object_io_t)lparam;
 			debug(DEBUG, "==> rcsocks A side MSG_AIOIN!\n");
 
-			if(!strcmp(object_name((object_t)io), "rcsocks A side"))	///<表示有新连接
+            if (io->mode == mode_tcp_server)
 			{
 				debug(DEBUG, "==> new client connect!\n");
 			}
@@ -113,8 +113,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 				{
 					case socks_state_version:
 					{
-						memset(buffer, 0, BUFFER_MAX);
-
+                        memset(buffer, 0, sizeof(buffer));
 						rxnum = io->_input(&io->parent, buffer, BUFFER_MAX, TRUE);
 						if(rxnum < 3)
 						{

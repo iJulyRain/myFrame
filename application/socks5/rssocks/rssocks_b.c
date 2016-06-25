@@ -49,7 +49,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
 			object_io_t client = (object_io_t)lparam;
 
-			memset(buffer, 0, BUFFER_MAX);
+            memset(buffer, 0, sizeof(buffer));
 			rxnum = client->_input(&client->parent, buffer, BUFFER_MAX, TRUE);
 
 			object_io_t client_stream = (object_io_t)client->user_ptr;
@@ -64,7 +64,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			object_io_t client = (object_io_t)lparam;
 			object_io_t client_stream = (object_io_t)client->user_ptr;
 			struct s_header s_header;
-			char response[BUFFER_MAX];
+			char response[128];
 
 			if(client_stream == NULL)
 			{

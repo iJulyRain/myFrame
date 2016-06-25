@@ -22,7 +22,7 @@
 
 static void udp_info(void)
 {
-//	debug(RELEASE, "==> AIO(udp) writen by li zhixian @2015.06.01 ^.^ <==\n");
+	debug(RELEASE, "==> AIO(udp) writen by li zhixian @2015.06.01 ^.^ <==\n");
 }
 
 static int udp_init(object_t parent, HMOD hmod, const char *settings)
@@ -136,7 +136,7 @@ void register_io_udp(void)
 	object_addend(&io.parent, NAME, object_class_type_io);
 }
 
-object_io_t new_object_io_udp(const char *alias)
+object_io_t new_object_io_udp(const char *alias, int attr)
 {
-	return new_object_io(NAME, alias);
+	return new_object_io(NAME, alias, attr);
 }

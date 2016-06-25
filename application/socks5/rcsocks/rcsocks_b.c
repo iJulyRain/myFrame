@@ -60,7 +60,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			object_io_t io = (object_io_t)lparam;
 			debug(DEBUG, "==> rcsocks B side MSG_AIOIN!\n");
 
-			if(!strcmp(object_name((object_t)io), "rcsocks B side"))	///<表示有新连接
+            if (io->mode == mode_tcp_server)
 			{
 				debug(DEBUG, "==> new client connect!\n");
 			}
@@ -72,7 +72,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 				object_io_t io_stream;
 				struct control_block *cb;
 
-				memset(buffer, 0, BUFFER_MAX);
+                memset(buffer, 0, sizeof(buffer));
 				rxnum = io->_input(&io->parent, buffer, BUFFER_MAX, TRUE);
 				debug(DEBUG, "MSG_AIOIN: %d bytes!\n", rxnum);
 
@@ -131,15 +131,21 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 						memset(&s_header, 0, sizeof(struct s_header));
 						memcpy(&s_header, buffer, sizeof(struct s_header));
 
-						if((s_header.magic & 0xFFFF) == 0x55AA
-						&& (s_header.command & 0xFF) == SOCK_BREAK)
-						{
-							io->user_ptr = NULL;
-							cb->bind_io = NULL;
+						if((s_header.magic & 0xFFFF) == 0x55AA)
+                        {
+                            if ((s_header.command & 0xFF) == SOCK_BREAK)
+                            {
+                                io->user_ptr = NULL;
+                                cb->bind_io = NULL;
 
-							io_stream->_close(&io_stream->parent);
-							io_stream->isconnect = REMOVE;
-						}
+                                io_stream->_close(&io_stream->parent);
+                                io_stream->isconnect = REMOVE;
+                            }
+                            else if ((s_header.command & 0xFF) == SOCK_HEART)
+                            {
+                                debug(DEBUG, "==> HEART BEART!\n");
+                            }
+                        }
 						else
 						{
 							io_stream->_output(&io_stream->parent, buffer, rxnum);
@@ -184,7 +190,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 					debug(DEBUG, "==> RST_IO\n");
 					struct s_header s_header;
 					object_io_t io = (object_io_t)lparam;
-					char buffer[BUFFER_MAX];
+					char buffer[128];
 
 					memset(buffer, 0, sizeof(buffer));
 					memset(&s_header, 0, sizeof(struct s_header));

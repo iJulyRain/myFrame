@@ -41,7 +41,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			object_io_t client;
 
 			///<新建一个udp client
-			client = new_object_io_udp("udp client");
+			client = new_object_io_udp("udp client", 0);
 			assert(client);
 			client->_info();
 			client->_init(&client->parent, hmod, "192.168.199.172:40002");

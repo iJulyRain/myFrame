@@ -32,7 +32,8 @@ int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
                 ot->poller = (poller_t)poller_create(POLLER_MAX);
 
 			///<用于定时重连
-			timer_add(hmod, 0, 1 * ONE_SECOND, NULL, TIMER_ASYNC);
+			//timer_add(hmod, 0, 1 * ONE_SECOND, NULL, TIMER_ASYNC);
+			timer_add(hmod, 0, 1, NULL, TIMER_ASYNC);
 			timer_start(hmod, 0);
 		}
 			break;
@@ -40,40 +41,42 @@ int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 		{
 			int id = (int)wparam;
 
-			if(id == 0)	///<connect
-			{
-				debug(DEBUG, "=> timer\n");
-				timer_stop(hmod, 0);
+			if(id != 0)
+                break;
 
-				object_thread_t this = (object_thread_t)hmod;
-				object_io_t client;
-                poller_t poller = NULL;
-				struct object_information *container;
+            //debug(DEBUG, "=> timer\n");
+            timer_stop(hmod, 0);
 
-				container = &this->io_container;
+            object_thread_t this = (object_thread_t)hmod;
+            object_io_t client;
+            poller_t poller = NULL;
+            struct object_information *container;
 
-                poller = this->poller;
+            container = &this->io_container;
 
-				CONTAINER_FOREACH(container, object_io_t, client)
-					if(client->_state((object_t)client) != ONLINE)
-					{
-						client->_connect((object_t)client);
-						if(client->_state((object_t)client) == ONLINE)
-						{
-							poller_event_setfd(client->event, client->_getfd((object_t)client));
-							poller_add((long)poller,  client->event);
-							send_message(hmod, MSG_AIOCONN, 0, (LPARAM)client);
-						}
-						else if(client->_state((object_t)client) == OFFLINE)
-						{
-							client->_close((object_t)client);
-							send_message(hmod, MSG_AIOCONN, 0, (LPARAM)client);
-						}
-					}
-				CONTAINER_FOREACH_END
+            poller = this->poller;
 
-				timer_start(hmod, 0);
-			}
+            debug(DEBUG, "container->num: %d\n", container->size);
+
+            CONTAINER_FOREACH(container, object_io_t, client)
+                if(client->_state((object_t)client) != ONLINE)
+                {
+                    client->_connect((object_t)client);
+                    if(client->_state((object_t)client) == ONLINE)
+                    {
+                        poller_event_setfd(client->event, client->_getfd((object_t)client));
+                        poller_add((long)poller,  client->event);
+                        send_message(hmod, MSG_AIOCONN, 0, (LPARAM)client);
+                    }
+                    else if(client->_state((object_t)client) == OFFLINE)
+                    {
+                        client->_close((object_t)client);
+                        send_message(hmod, MSG_AIOCONN, 0, (LPARAM)client);
+                    }
+                }
+            CONTAINER_FOREACH_END
+
+            timer_start(hmod, 0);
 		}
 			break;
 		case MSG_AIOERR:
@@ -85,9 +88,29 @@ int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			poller_del((long)ot->poller, client->event);
 
 			if (client->isconnect == ONLINE)
+            {
+                debug(DEBUG, "==> <%s> closed \n", object_name(&client->parent));
 				client->_close((object_t)client);
+            }
+
+            if (client->attr & IO_ATTR_REMOVE)
+            {
+                debug(DEBUG, "==> <%s> will be removed \n", object_name(&client->parent));
+                client->remove = TRUE;
+            }
 		}
 			break;
+        case MSG_AIOCLR:
+        {
+            object_io_t client = (object_io_t)lparam;
+            object_thread_t ot = (object_thread_t)hmod;
+
+            list_remove(&client->client);
+            object_container_delete(&client->parent, &ot->io_container);
+
+            free_object_io(client);
+        }
+            break;
 		case MSG_TERM:
 		{
             timer_remove(hmod, 0);
@@ -123,6 +146,8 @@ object_thread_t new_object_thread(thread_proc_t thread_proc)
     ot->entry = thread_entry;
     INIT_LOCK(&ot->msgqueue.lock);
     sem_init(&ot->msgqueue.wait, 0, 0);
+
+    ot->poller = NULL;
 
 	////////////
 	object_container_init(&ot->io_container);
