@@ -66,7 +66,7 @@ static int tcp_server_client_connect(object_t parent)
 {
 	object_io_t io = (object_io_t)parent;
 
-	return (io->isconnect = ONLINE);
+	return io->isconnect;
 }
 
 static int tcp_server_client_getfd(object_t parent)

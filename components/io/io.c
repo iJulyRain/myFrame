@@ -45,6 +45,9 @@ object_io_t new_object_io(const char *io_type, const char *alias, int attr)
     io->server = NULL;
     io->attr = attr;
 
+    if (io->attr & IO_ATTR_REMOVE)
+        io->remove = TRUE;
+
     list_init(&io->client);
 	INIT_LOCK(&io->lock);
 

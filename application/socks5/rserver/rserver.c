@@ -105,20 +105,21 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
                 break;
 
             server = client->server;
-            debug(DEBUG, "<%s> ==> MSG_AIOCONN[%d]\n", object_name(&server->parent), client->isconnect);
+            debug(DEBUG, "==> client connect to <%s> [%d]\n", object_name(&server->parent), client->isconnect);
 
             if (!strcmp(object_name(&server->parent), "server proxy")) ///< from proxychain
             {
                 io_bind = get_one_client(server_client);
                 if (io_bind == NULL)
                 {
-				    debug(RELEASE, "==> rclient maybe not running!\n");
+				    debug(RELEASE, "==> Warnning: rclient maybe not running!\n");
                     client->_close(&client->parent);
                     break;
                 }
 
                 cb = (struct control_block *)calloc(1, sizeof(struct control_block));
                 assert(cb);
+
                 cb->io_bind = io_bind;
                 cb->state = socks_state_version;
                 client->user_ptr = cb; 
@@ -133,6 +134,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
                 cb = (struct control_block *)calloc(1, sizeof(struct control_block));
                 assert(cb);
 
+                cb->io_bind = NULL;
                 client->user_ptr = cb;
             }
 		}
@@ -156,7 +158,10 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 				cb = (struct control_block *)client->user_ptr;
 
 				if (cb->io_bind == NULL)
+                {
+                    client->_close(&client->parent);
 					break;
+                }
 
 				switch (cb->state)
 				{
@@ -304,6 +309,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 				debug(DEBUG, "MSG_AIOIN: %d bytes!\n", rxnum);
 
 				cb = (struct control_block *)client->user_ptr; 
+                assert(cb);
 
 				if (cb->io_bind == NULL)
 					break;
@@ -394,7 +400,13 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
             io_bind = cb->io_bind;
 
-            if (!strcmp(object_name(&server->parent), "server proxy")) ///< from rclient 
+            cb->io_bind = NULL;
+
+            cb = (struct control_block *)io_bind->user_ptr;
+            if (cb != NULL)
+                cb->io_bind = NULL;
+
+            if (!strcmp(object_name(&server->parent), "server proxy")) ///< from proxychain 
             {
                 ///<reset io
                 debug(DEBUG, "==> RST_IO\n");
@@ -415,9 +427,6 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
                 ///<close proxychain connect
                 io_bind->_close(&io_bind->parent);
             }
-
-            cb->io_bind = NULL;
-            ((struct control_block *)io_bind->user_ptr)->io_bind = NULL;
 		}
 			break;
 	}

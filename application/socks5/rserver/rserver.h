@@ -34,7 +34,6 @@ struct control_block
 	object_io_t io_bind;
 };
 
-
 #define GET_IO	0x01
 #define RST_IO	0x02
 

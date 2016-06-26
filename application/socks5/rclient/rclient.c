@@ -55,7 +55,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			}
 
 			timer_add(hmod, 1, 60 * ONE_SECOND, NULL, TIMER_ASYNC); ///<HEART BEAT
-			timer_start(hmod, 1);
+			//timer_start(hmod, 1);
 		}
 			break;
         case MSG_TIMER:
@@ -98,17 +98,20 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
             client = (object_io_t)lparam;
             cb = (struct control_block *)client->user_ptr;
 
-            if (strstr(object_name(&client->parent), "rserver client"))
+            debug(DEBUG, "==> <%s> connected\n", object_name(&client->parent));
+
+            if (strstr(object_name(&client->parent), "rserver client")) ///<connect to rserver
             {
-                if (cb)
+                if (cb != NULL)
                     break;
 
                 cb = (struct control_block *)calloc(1, sizeof(struct control_block));
                 assert(cb);
 
+                cb->io_bind = NULL;
                 client->user_ptr = cb;
             }
-            else
+            else ///< connect to website
             {
                 io_bind = cb->io_bind;
                 if (io_bind == NULL)
@@ -141,8 +144,6 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
 		case MSG_AIOIN:
 		{
-			//debug(DEBUG, "==> MSG AIOIN!\n");
-
 			int rxnum;
 			char buffer[BUFFER_MAX];
 
@@ -156,7 +157,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			rxnum = client->_input(&client->parent, buffer, BUFFER_MAX, TRUE);
 			//debug(DEBUG, "==> rxnum: %d bytes\n", rxnum);
 
-            if (strstr(object_name(&client->parent), "rserver client"))
+            if (strstr(object_name(&client->parent), "rserver client")) ///<connect to rserver
             {
                 memset(&s_header, 0, sizeof(struct s_header));
                 memcpy(&s_header, buffer, sizeof(struct s_header));
@@ -168,8 +169,10 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
                         case SOCK_BREAK: //< close
                         {
                             cb = (struct control_block *)client->user_ptr;
-                            io_bind = cb->io_bind; 
+                            if (cb == NULL)
+                                break;
 
+                            io_bind = cb->io_bind; 
                             if (io_bind != NULL)
                                 io_bind->_close(&io_bind->parent);
                         }
@@ -204,6 +207,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
                             io_bind->user_ptr = cb;
 
                             cb = (struct control_block *)client->user_ptr;
+                            assert(cb);
                             cb->io_bind = io_bind;
 
                             io_bind->_info();
@@ -217,7 +221,11 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
                 }
             }
 
+            ///<transfer
             cb = (struct control_block *)client->user_ptr;
+            if (cb == NULL)
+                break;
+
             io_bind = cb->io_bind; 
             if(io_bind == NULL)
                 break;
@@ -232,11 +240,14 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			object_io_t client, io_bind;
             struct control_block *cb; 
 
+            debug(DEBUG, "MSG_AIOBREAK\n");
+
             client = (object_io_t)lparam;
             cb = (struct control_block *)client->user_ptr;
+            if (cb == NULL)
+                break;
 
             io_bind = cb->io_bind;
-
             if (io_bind == NULL)
                 break;
 
@@ -261,7 +272,9 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
             }
 
             cb->io_bind = NULL;
-            ((struct control_block *)io_bind->user_ptr)->io_bind = NULL;
+            cb = (struct control_block *)io_bind->user_ptr;
+            if (cb != NULL)
+                cb->io_bind = NULL;
 		}
 			break;
 	}

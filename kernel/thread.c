@@ -92,18 +92,14 @@ int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
                 debug(DEBUG, "==> <%s> closed \n", object_name(&client->parent));
 				client->_close((object_t)client);
             }
-
-            if (client->attr & IO_ATTR_REMOVE)
-            {
-                debug(DEBUG, "==> <%s> will be removed \n", object_name(&client->parent));
-                client->remove = TRUE;
-            }
 		}
 			break;
         case MSG_AIOCLR:
         {
             object_io_t client = (object_io_t)lparam;
             object_thread_t ot = (object_thread_t)hmod;
+
+            debug(DEBUG, "==> <%s> has been removed \n", object_name(&client->parent));
 
             list_remove(&client->client);
             object_container_delete(&client->parent, &ot->io_container);
