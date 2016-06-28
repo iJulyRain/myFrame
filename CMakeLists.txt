@@ -13,6 +13,7 @@ set(CMAKE_C_FLAGS "-g -Wall -O2 ")
 
 include_directories(${PROJECT_SOURCE_DIR}/include
 					${PROJECT_SOURCE_DIR}/components/io
+					${PROJECT_SOURCE_DIR}/components/io/io_pool
 					${PROJECT_SOURCE_DIR}/components/buffer
 					${PROJECT_SOURCE_DIR}/components/thread_pool
 					${PROJECT_SOURCE_DIR}/components/mem_pool

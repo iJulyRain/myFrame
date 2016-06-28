@@ -9,6 +9,8 @@
 
 #include "buffer.h"
 
+#include "io_pool.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -52,10 +54,10 @@ typedef struct object_io
 
     int attr;
     int remove; ///<remove from container
+    int closed; ///<closed by MSG_AIBREAK|MSG_AIOERR
 
     struct object_io *server; ///< only apply to tcp_server_client mode
-
-	list_t client; ///<server accept's clients, only apply to tcp_server mode
+    object_io_pool_t io_pool;
 
 	pthread_mutex_t lock;
 

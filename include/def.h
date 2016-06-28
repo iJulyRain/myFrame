@@ -23,6 +23,7 @@
 #define TRUE		1
 #define FALSE		0
 
+#define UNUSED      -1 
 #define OFFLINE		0x00	
 #define ONLINE		0x01	
 #define CONNECTING	0x02

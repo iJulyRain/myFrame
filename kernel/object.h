@@ -80,15 +80,15 @@ int object_type(object_t object);
 
 #define CONTAINER_FOREACH(container, T, pt)	\
 	list_t *node;\
-	for(node = container->list.next; \
-		node != &container->list; \
+	for(node = (container)->list.next; \
+		node != &((container)->list); \
 		node = node->next)	\
 	{	\
 		pt = (T)list_entry(node, struct object, list);
 
 #define CONTAINER_FOREACH_END	}
 
-#define CONTAINER_FOREACH_RESET(container) node = container->list.next;continue; 
+#define CONTAINER_FOREACH_RESET(container) node = (container)->list.next;continue; 
 
 #define OBJECT_FOREACH(type, T, pt) \
 	list_t *node;\

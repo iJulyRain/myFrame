@@ -152,7 +152,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
             if (!strcmp(object_name(&server->parent), "server proxy")) ///< from proxychain
             {
 				int i, rxnum;
-				char buffer[BUFFER_MAX];
+				char buffer[BUFFER_SIZE];
 				struct control_block *cb;
 
 				cb = (struct control_block *)client->user_ptr;
@@ -168,7 +168,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 					case socks_state_version:
 					{
                         memset(buffer, 0, sizeof(buffer));
-						rxnum = client->_input(&client->parent, buffer, BUFFER_MAX, TRUE);
+						rxnum = client->_input(&client->parent, buffer, BUFFER_SIZE, TRUE);
 						if(rxnum < 3)
 						{
 							debug(RELEASE, "==> invalid version request!\n");
@@ -201,7 +201,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
 						debug(DEBUG, "SOCKS5 client verify!\n");
 
-						memset(buffer, 0, BUFFER_MAX);
+						memset(buffer, 0, BUFFER_SIZE);
 						buffer[0] = 0x05;
 						buffer[1] = 0x00;
 						
@@ -214,7 +214,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
 					case socks_state_connect:
 					{
-						rxnum = client->_input(&client->parent, buffer, BUFFER_MAX, TRUE);
+						rxnum = client->_input(&client->parent, buffer, BUFFER_SIZE, TRUE);
 						if (rxnum < 10)
 						{
 							debug(RELEASE, "==> invalid connection request!\n");
@@ -272,7 +272,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 						//<包装协议，转发
 						struct s_header s_header;
 
-						memset(buffer, 0, BUFFER_MAX);
+						memset(buffer, 0, BUFFER_SIZE);
 						memset(&s_header, 0, sizeof(struct s_header));
 
 						s_header.magic = 0x55AA;
@@ -291,7 +291,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
 					case socks_state_stream:
 					{
-						rxnum = client->_input(&client->parent, buffer, BUFFER_MAX, TRUE);
+						rxnum = client->_input(&client->parent, buffer, BUFFER_SIZE, TRUE);
 						cb->io_bind->_output(&cb->io_bind->parent, buffer, rxnum);
 					}
 						break;
@@ -300,12 +300,12 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
             else if (!strcmp(object_name(&server->parent), "server client")) ///< from rclient 
             {
             	int rxnum;
-				char buffer[BUFFER_MAX];
+				char buffer[BUFFER_SIZE];
 
 				struct control_block *cb;
 
                 memset(buffer, 0, sizeof(buffer));
-				rxnum = client->_input(&client->parent, buffer, BUFFER_MAX, TRUE);
+				rxnum = client->_input(&client->parent, buffer, BUFFER_SIZE, TRUE);
 				debug(DEBUG, "MSG_AIOIN: %d bytes!\n", rxnum);
 
 				cb = (struct control_block *)client->user_ptr; 

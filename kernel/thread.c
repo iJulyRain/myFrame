@@ -87,11 +87,13 @@ int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
 			poller_del((long)ot->poller, client->event);
 
-			if (client->isconnect == ONLINE)
+			if (io_state(&client->parent) == ONLINE)
             {
                 debug(DEBUG, "==> <%s> closed \n", object_name(&client->parent));
 				client->_close((object_t)client);
             }
+
+            client->closed = TRUE;
 		}
 			break;
         case MSG_AIOCLR:
@@ -101,7 +103,6 @@ int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
             debug(DEBUG, "==> <%s> has been removed \n", object_name(&client->parent));
 
-            list_remove(&client->client);
             object_container_delete(&client->parent, &ot->io_container);
 
             free_object_io(client);

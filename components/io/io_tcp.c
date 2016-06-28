@@ -22,7 +22,7 @@
 
 static void tcp_info(void)
 {
-//	debug(RELEASE, "==> AIO(tcp) writen by li zhixian @2015.06.01 ^.^ <==\n");
+	debug(RELEASE, "==> AIO(tcp) writen by li zhixian @2015.06.01 ^.^ <==\n");
 }
 
 static int tcp_init(object_t parent, HMOD hmod, const char *settings)

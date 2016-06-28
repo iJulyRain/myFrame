@@ -142,8 +142,6 @@ static int tcp_server_recv(object_t parent)
 
     client->server = io;
 
-	list_insert_after(&io->client, &client->client);
-
 	poller_event_setfd(client->event, sd);
 	poller_add((long)this->poller,  client->event);
 

@@ -24,7 +24,7 @@
 
 #define POLLER_MAX		512	
 
-#define BUFFER_SIZE		4096	
-#define BUFFER_MAX		4096 * 10
+#define BUFFER_SIZE		1024 * 8 
+#define BUFFER_MAX		1024 * 128 
 
 #endif //__CONFIG_H__ 

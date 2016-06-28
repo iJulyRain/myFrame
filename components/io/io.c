@@ -43,12 +43,14 @@ object_io_t new_object_io(const char *io_type, const char *alias, int attr)
 	strcpy(io->parent.name, alias);
 	io->user_ptr = NULL;
     io->server = NULL;
+    io->io_pool = NULL;
     io->attr = attr;
 
     if (io->attr & IO_ATTR_REMOVE)
         io->remove = TRUE;
 
-    list_init(&io->client);
+    io->closed = FALSE;
+
 	INIT_LOCK(&io->lock);
 
 	return io;

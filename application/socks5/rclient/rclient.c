@@ -130,6 +130,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
                 {
                     debug(DEBUG, " %s <==> %s failed\n", object_name(&io_bind->parent), object_name(&client->parent));
                     s_header.data[0] = 1;
+                    ///<为加入到poller，手动删除
                     post_message(hmod, MSG_AIOBREAK, 0, (LPARAM)client);
                     post_message(hmod, MSG_AIOCLR, 0, (LPARAM)client);
                 }
@@ -145,7 +146,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 		case MSG_AIOIN:
 		{
 			int rxnum;
-			char buffer[BUFFER_MAX];
+			char buffer[BUFFER_SIZE];
 
 			object_io_t client, io_bind;
             struct control_block *cb;
@@ -154,7 +155,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			client = (object_io_t)lparam;
 
             memset(buffer, 0, sizeof(buffer));
-			rxnum = client->_input(&client->parent, buffer, BUFFER_MAX, TRUE);
+			rxnum = client->_input(&client->parent, buffer, BUFFER_SIZE, TRUE);
 			//debug(DEBUG, "==> rxnum: %d bytes\n", rxnum);
 
             if (strstr(object_name(&client->parent), "rserver client")) ///<connect to rserver
