@@ -22,6 +22,8 @@
 
 #define NAME "R CLIENT"
 
+static object_io_pool_t io_pool;
+
 /**
 * @brief loop process 
 *
@@ -41,6 +43,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			int i;
 			char name[32];
 			object_io_t client;
+            struct control_block *cb;
 
             ///<clients connect to rserver
 			for(i = 0; i < global_conf.ncon; i++)
@@ -52,10 +55,20 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 				assert(client);
 				client->_info();
 				client->_init(&client->parent, hmod, global_conf.server);
+
+                cb = (struct control_block *)calloc(1, sizeof(struct control_block));
+                assert(cb);
+                cb->io_bind = NULL;
+
+                client->user_ptr = cb;
 			}
 
+            io_pool = new_io_pool("tcp client", IO_POOL_MAX, mode_tcp_client);
+            assert(io_pool);
+            io_pool->_init(&io_pool->parent);
+
 			timer_add(hmod, 1, 60 * ONE_SECOND, NULL, TIMER_ASYNC); ///<HEART BEAT
-			//timer_start(hmod, 1);
+			timer_start(hmod, 1);
 		}
 			break;
         case MSG_TIMER:
@@ -101,45 +114,35 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
             debug(DEBUG, "==> <%s> connected\n", object_name(&client->parent));
 
             if (strstr(object_name(&client->parent), "rserver client")) ///<connect to rserver
+                break;
+
+            io_bind = cb->io_bind;
+            if (io_bind == NULL)
+                break;
+
+            memset(&s_header, 0, sizeof(struct s_header));
+            s_header.magic = 0x55AA;
+            s_header.command = SOCK_CONNECT;
+
+            if(client->_state((object_t)client) == ONLINE)
             {
-                if (cb != NULL)
-                    break;
-
-                cb = (struct control_block *)calloc(1, sizeof(struct control_block));
-                assert(cb);
-
-                cb->io_bind = NULL;
-                client->user_ptr = cb;
+                debug(DEBUG, " %s <==> %s success\n", object_name(&io_bind->parent), object_name(&client->parent));
+                s_header.data[0] = 0;
             }
-            else ///< connect to website
+            else
             {
-                io_bind = cb->io_bind;
-                if (io_bind == NULL)
-                    break;
+                debug(DEBUG, " %s <==> %s failed\n", object_name(&io_bind->parent), object_name(&client->parent));
+                s_header.data[0] = 1;
 
-                memset(&s_header, 0, sizeof(struct s_header));
-                s_header.magic = 0x55AA;
-                s_header.command = SOCK_CONNECT;
-
-                if(client->_state((object_t)client) == ONLINE)
-                {
-                    debug(DEBUG, " %s <==> %s success\n", object_name(&io_bind->parent), object_name(&client->parent));
-                    s_header.data[0] = 0;
-                }
-                else
-                {
-                    debug(DEBUG, " %s <==> %s failed\n", object_name(&io_bind->parent), object_name(&client->parent));
-                    s_header.data[0] = 1;
-                    ///<为加入到poller，手动删除
-                    post_message(hmod, MSG_AIOBREAK, 0, (LPARAM)client);
-                    post_message(hmod, MSG_AIOCLR, 0, (LPARAM)client);
-                }
-
-                memset(response, 0, sizeof(response));
-                memcpy(response, &s_header, sizeof(struct s_header));
-
-                io_bind->_output(&io_bind->parent, response, sizeof(struct s_header));
+                ///<未加入到poller，手动删除
+                post_message(hmod, MSG_AIOBREAK, 0, (LPARAM)client);
+                post_message(hmod, MSG_AIOCLR, 0, (LPARAM)client);
             }
+
+            memset(response, 0, sizeof(response));
+            memcpy(response, &s_header, sizeof(struct s_header));
+
+            io_bind->_output(&io_bind->parent, response, sizeof(struct s_header));
         }
             break;
 
@@ -158,7 +161,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			rxnum = client->_input(&client->parent, buffer, BUFFER_SIZE, TRUE);
 			//debug(DEBUG, "==> rxnum: %d bytes\n", rxnum);
 
-            if (strstr(object_name(&client->parent), "rserver client")) ///<connect to rserver
+            if (strstr(object_name(&client->parent), "rserver client")) ///<from rserver
             {
                 memset(&s_header, 0, sizeof(struct s_header));
                 memcpy(&s_header, buffer, sizeof(struct s_header));
@@ -199,13 +202,16 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
                             debug(DEBUG, "==> new client <---> %s\n", settings);
 
                             ///<创建连接
-                            io_bind = new_object_io_tcp(settings, IO_ATTR_REMOVE);
+                            io_bind = (object_io_t)io_pool->_get_one(&io_pool->parent);
                             assert(io_bind);
 
-                            cb = (struct control_block *)calloc(1, sizeof(struct control_block));
-                            assert(cb);
-                            cb->io_bind = client;
-                            io_bind->user_ptr = cb;
+                            if (io_bind->user_ptr == NULL)
+                            {
+                                cb = (struct control_block *)calloc(1, sizeof(struct control_block));
+                                assert(cb);
+                                cb->io_bind = client;
+                                io_bind->user_ptr = cb;
+                            }
 
                             cb = (struct control_block *)client->user_ptr;
                             assert(cb);
@@ -273,6 +279,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
             }
 
             cb->io_bind = NULL;
+
             cb = (struct control_block *)io_bind->user_ptr;
             if (cb != NULL)
                 cb->io_bind = NULL;

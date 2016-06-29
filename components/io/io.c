@@ -61,22 +61,34 @@ void free_object_io(object_io_t io)
     if(!io)
         return;
 
+    io->isconnect = UNUSED;
+    io->closed = FALSE;
+
     if(io->settings)
+    {
         free(io->settings);
+        io->settings = NULL;
+    }
 
     if(io->addr)
+    {
         free(io->addr);
+        io->addr = NULL;
+    }
 
     if(io->buffer)
+    {
         object_buffer_free(io->buffer);
+        io->buffer = NULL;
+    }
 
     if(io->event)
+    {
         poller_event_release(io->event);
+        io->event = NULL;
+    }
 
-    if(io->user_ptr)
-		free(io->user_ptr);
-
-    free(io);
+   // free(io);
 }
 
 int io_getfd(object_t parent) 

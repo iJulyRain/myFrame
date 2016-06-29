@@ -27,21 +27,23 @@ static void tcp_server_client_info(void)
 
 static int tcp_server_client_init(object_t parent, HMOD hmod, const char *settings)
 {
-	object_io_t io;
-	struct sockaddr_in *addr;
-	char ip[16];
-	int port;
+	object_io_t client;
+	//struct sockaddr_in *addr;
+	//char ip[16];
+	//int port;
 	object_thread_t this = (object_thread_t)hmod;
 
 	assert(settings);
 
-	io = (object_io_t)parent;
-	io->settings = strdup(settings);
-	io->hmod = hmod;
-	io->mode = mode_tcp_server_client;
+	client = (object_io_t)parent;
 
-	debug(DEBUG, "settings: %s\n", io->settings);
+	client->settings = strdup(settings);
+	debug(DEBUG, "settings: %s\n", client->settings);
 
+	client->hmod = hmod;
+	client->mode = mode_tcp_server_client;
+
+    /*
 	io->addr = (struct sockaddr_in *)calloc(1, sizeof(struct sockaddr_in));
 
 	memset(ip, 0, sizeof(ip));
@@ -51,13 +53,14 @@ static int tcp_server_client_init(object_t parent, HMOD hmod, const char *settin
 	addr->sin_family = AF_INET;
 	addr->sin_addr.s_addr = inet_addr(ip);
 	addr->sin_port = htons(port);
+    */
 
-	io->isconnect = ONLINE;
+	client->isconnect = ONLINE;
 
-	io->buffer = object_buffer_create();
-	io->event = poller_event_create(io);
+	client->buffer = object_buffer_create();
+	client->event = poller_event_create(client);
 
-	object_container_addend(&io->parent, &this->io_container);	///<填充到线程的IO容器里面
+	object_container_addend(&client->parent, &this->io_container);	///<填充到线程的IO容器里面
 
 	return 0;
 }

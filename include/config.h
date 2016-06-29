@@ -27,4 +27,6 @@
 #define BUFFER_SIZE		1024 * 8 
 #define BUFFER_MAX		1024 * 128 
 
+#define IO_POOL_MAX     128 
+
 #endif //__CONFIG_H__ 

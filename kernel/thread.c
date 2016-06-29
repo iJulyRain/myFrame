@@ -106,6 +106,9 @@ int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
             object_container_delete(&client->parent, &ot->io_container);
 
             free_object_io(client);
+
+            if (client->io_pool)
+                object_container_addend(&client->parent, &client->io_pool->container);
         }
             break;
 		case MSG_TERM:

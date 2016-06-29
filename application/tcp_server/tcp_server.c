@@ -47,7 +47,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			assert(server);
 
 			server->_info();
-			server->_init(&server->parent, hmod, "0.0.0.0:60001:20");
+			server->_init(&server->parent, hmod, "0.0.0.0:60001:20:24");
 		}
 			break;
 		case MSG_TIMER:
@@ -115,12 +115,5 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 */
 int register_thread_tcp_server(void)
 {
-    object_thread_t ot;
-
-    ot = new_object_thread(thread_proc); 
-	assert(ot);
-
-    object_addend(&ot->parent, NAME, object_class_type_thread);
-
-	return 0;
+    return create_thread(thread_proc, NAME, 0);
 }

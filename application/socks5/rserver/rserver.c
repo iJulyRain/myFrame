@@ -29,24 +29,27 @@ static object_io_t server_client; //listen client
 
 static object_io_t get_one_client(object_io_t server)
 {
-    list_t *node;
-    object_io_t o = NULL;
+    object_io_t io = NULL;
+    object_thread_t ot;
     struct control_block *cb;
 
-    for(node = server->client.next;
-        node != &server->client;
-        node = node->next)
-    {
-        o = (object_io_t)list_entry(node, struct object_io, client);
+    ot = (object_thread_t)server->hmod;
 
-        cb = (struct control_block *)o->user_ptr;
-        if (cb->io_bind == NULL)
+    CONTAINER_FOREACH(&ot->io_container, object_io_t, io)
+        cb = (struct control_block *)io->user_ptr;
+
+        if (io->mode == mode_tcp_server)
+            continue;
+
+        if(!strcmp(object_name(&io->server->parent), object_name(&server->parent))
+        && io_state(&io->parent) == ONLINE
+        && cb->io_bind == NULL)
             break;
 
-        o = NULL;
-    }
+        io = NULL;
+    CONTAINER_FOREACH_END
 
-    return o;
+    return io;
 }
 
 /**
@@ -75,7 +78,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
             ///< 启动server proxy
 			memset(settings, 0, sizeof(settings));
-			sprintf(settings, "0.0.0.0:%d:20", global_conf.reverse_port);
+			sprintf(settings, "0.0.0.0:%d:50:%d", global_conf.reverse_port, IO_POOL_MAX);
 
 			server_proxy->_info();
 			server_proxy->_init(&server_proxy->parent, hmod, settings);
@@ -87,20 +90,20 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
             ///< 启动server client 
 			memset(settings, 0, sizeof(settings));
-			sprintf(settings, "0.0.0.0:%d:20", global_conf.listen_port);
+			sprintf(settings, "0.0.0.0:%d:50:%d", global_conf.listen_port, IO_POOL_MAX);
 
 			server_client->_info();
 			server_client->_init(&server_client->parent, hmod, settings);
 		}
 			break;
+
 		case MSG_AIOCONN:
 		{
-            object_io_t client, server;
-            object_io_t io_bind;
-
+            object_io_t client, server, io_bind;
             struct control_block *cb;
 
             client = (object_io_t)lparam;
+
             if (client->mode == mode_tcp_server) ///<ignore
                 break;
 
@@ -112,7 +115,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
                 io_bind = get_one_client(server_client);
                 if (io_bind == NULL)
                 {
-				    debug(RELEASE, "==> Warnning: rclient maybe not running!\n");
+				    debug(RELEASE, "==> Warnning: rclient maybe not running or clients use up!\n");
                     client->_close(&client->parent);
                     break;
                 }
@@ -156,7 +159,6 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 				struct control_block *cb;
 
 				cb = (struct control_block *)client->user_ptr;
-
 				if (cb->io_bind == NULL)
                 {
                     client->_close(&client->parent);
@@ -292,7 +294,8 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 					case socks_state_stream:
 					{
 						rxnum = client->_input(&client->parent, buffer, BUFFER_SIZE, TRUE);
-						cb->io_bind->_output(&cb->io_bind->parent, buffer, rxnum);
+						if (cb->io_bind != NULL)
+						    cb->io_bind->_output(&cb->io_bind->parent, buffer, rxnum);
 					}
 						break;
 				}
@@ -301,6 +304,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
             {
             	int rxnum;
 				char buffer[BUFFER_SIZE];
+				struct s_header s_header;
 
 				struct control_block *cb;
 
@@ -308,9 +312,18 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 				rxnum = client->_input(&client->parent, buffer, BUFFER_SIZE, TRUE);
 				debug(DEBUG, "MSG_AIOIN: %d bytes!\n", rxnum);
 
-				cb = (struct control_block *)client->user_ptr; 
-                assert(cb);
+                memset(&s_header, 0, sizeof(struct s_header));
+                memcpy(&s_header, buffer, sizeof(struct s_header));
+                if((s_header.magic & 0xFFFF) == 0x55AA)
+                {
+                    if ((s_header.command & 0xFF) == SOCK_HEART)
+                    {
+                        debug(DEBUG, "==> HEART BEART!\n");
+                        break;
+                    }
+                }
 
+				cb = (struct control_block *)client->user_ptr; 
 				if (cb->io_bind == NULL)
 					break;
 
@@ -318,8 +331,6 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 				{
 					case socks_state_connect: //<转成sock5协议
 					{
-						struct s_header s_header;
-
 						memset(&s_header, 0, sizeof(struct s_header));
 						memcpy(&s_header, buffer, sizeof(struct s_header));
 
@@ -352,15 +363,17 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 						buffer[8] = 0x00; //匿名端口
 						buffer[9] = 0x00;
 
-						cb->io_bind->_output(&cb->io_bind->parent, buffer, 10);
-						cb->state = socks_state_stream;
-                        ((struct control_block *)cb->io_bind->user_ptr)->state = socks_state_stream;
+                        if (cb->io_bind)
+                        {
+                            cb->io_bind->_output(&cb->io_bind->parent, buffer, 10);
+                            ((struct control_block *)cb->io_bind->user_ptr)->state = socks_state_stream;
+                        }
+
+                        cb->state = socks_state_stream;
 					}
 						break;
 					case socks_state_stream:
 					{
-						struct s_header s_header;
-
 						memset(&s_header, 0, sizeof(struct s_header));
 						memcpy(&s_header, buffer, sizeof(struct s_header));
 
@@ -368,16 +381,14 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
                         {
                             if ((s_header.command & 0xFF) == SOCK_BREAK)
                             {
-                                cb->io_bind->_close(&cb->io_bind->parent);
-                            }
-                            else if ((s_header.command & 0xFF) == SOCK_HEART)
-                            {
-                                debug(DEBUG, "==> HEART BEART!\n");
+                                if (cb->io_bind)
+                                    cb->io_bind->_close(&cb->io_bind->parent);
                             }
                         }
 						else
 						{
-							cb->io_bind->_output(&cb->io_bind->parent, buffer, rxnum);
+                            if (cb->io_bind)
+							    cb->io_bind->_output(&cb->io_bind->parent, buffer, rxnum);
 						}
 					}
 						break;
@@ -399,7 +410,6 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
                 break;
 
             io_bind = cb->io_bind;
-
             cb->io_bind = NULL;
 
             cb = (struct control_block *)io_bind->user_ptr;
@@ -429,6 +439,19 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
             }
 		}
 			break;
+
+        case MSG_AIOCLR:
+        {
+            object_io_t client;
+
+            client = (object_io_t)lparam; 
+            if (client->user_ptr)
+            {
+                free(client->user_ptr);
+                client->user_ptr = NULL;
+            }
+        }
+            break;
 	}
 
 	return thread_default_process(hmod, message, wparam, lparam);

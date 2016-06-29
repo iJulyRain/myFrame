@@ -23,6 +23,7 @@
 //print level
 #define DEBUG 0	///<print level debug
 #define RELEASE 1 ///<print level release
+#define ERROR 1
 
 /**
 * @brief logger initialize 

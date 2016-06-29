@@ -95,7 +95,7 @@ static int tcp_connect(object_t parent)
             else if(conn == 0)
             {
                 io->isconnect = ONLINE;
-                debug(DEBUG, "==> [%s] 1 connect to '%s' success!\n", object_name(&io->parent), io->settings);
+                debug(DEBUG, "==> [%s] step 1 connect to '%s' success!\n", object_name(&io->parent), io->settings);
             }
         }
 	}
@@ -124,7 +124,7 @@ static int tcp_connect(object_t parent)
 				else
 				{
 					io->isconnect = ONLINE;
-					debug(DEBUG, "==> [%s] 2 connect to '%s' success!\n", object_name(&io->parent), io->settings);
+					debug(DEBUG, "==> [%s] step 2 connect to '%s' success!\n", object_name(&io->parent), io->settings);
 				}
 			}
 		}

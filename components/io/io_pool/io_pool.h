@@ -35,6 +35,6 @@ typedef struct object_io_pool
     object_t (*_get_one) (object_t parent);
 }*object_io_pool_t;
 
-object_io_pool_t new_io_pool(int pool_size, int mode);
+object_io_pool_t new_io_pool(const char *alias, int pool_size, int mode);
 
 #endif

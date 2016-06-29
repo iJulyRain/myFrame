@@ -27,45 +27,62 @@ static void tcp_server_info(void)
 
 static int tcp_server_init(object_t parent, HMOD hmod, const char *settings)
 {
-	object_io_t io;
+	object_io_t server;
 	struct sockaddr_in *addr;
 	char ip[16];
-	int port, backlog, option = 1;
+	int rc, port, client_max, backlog, option = 1;
 	object_thread_t this = (object_thread_t)hmod;
 
 	assert(settings);
 
-	io = (object_io_t)parent;
-	io->settings = strdup(settings);
-	io->hmod = hmod;
-	io->mode = mode_tcp_server;
+	server = (object_io_t)parent;
 
-	debug(DEBUG, "settings: %s\n", io->settings);
+	server->settings = strdup(settings);
+	debug(DEBUG, "settings: %s\n", server->settings);
 
-	io->addr = (struct sockaddr_in *)calloc(1, sizeof(struct sockaddr_in));
+	server->hmod = hmod;
+	server->mode = mode_tcp_server;
+
+	server->addr = (struct sockaddr_in *)calloc(1, sizeof(struct sockaddr_in));
 
 	memset(ip, 0, sizeof(ip));
-	sscanf(settings, "%[^:]:%d:%d", ip, &port, &backlog);
+	sscanf(settings, "%[^:]:%d:%d:%d", ip, &port, &backlog, &client_max);
 
-	addr = io->addr;
+	addr = server->addr;
 	addr->sin_family = AF_INET;
 	addr->sin_addr.s_addr = inet_addr(ip);
 	addr->sin_port = htons(port);
 
-	io->fd = socket(AF_INET, SOCK_STREAM, 0);
-	assert(io->fd > 0);
+	server->fd = socket(AF_INET, SOCK_STREAM, 0);
+	assert(server->fd > 0);
 
-	setsockopt(io->fd, SOL_SOCKET, SO_REUSEADDR, (void *)&option, sizeof(option));
+	setsockopt(server->fd, SOL_SOCKET, SO_REUSEADDR, (void *)&option, sizeof(option));
 
-	bind(io->fd, (struct sockaddr *)addr, sizeof(struct sockaddr_in));
-	listen(io->fd, backlog);
+	rc = bind(server->fd, (struct sockaddr *)addr, sizeof(struct sockaddr_in));
+    if (rc < 0)
+    {
+        debug(ERROR, "==> bind port %d failed!\n", port);
+        return -1;
+    }
 
-	io->isconnect = OFFLINE;
+	rc = listen(server->fd, backlog);
+    if (rc < 0)
+    {
+        debug(ERROR, "==> listen failed\n");
+        return -1;
+    }
 
-	io->buffer = NULL;	///<监听socket不需要buffer
-	io->event = poller_event_create(io);
+	server->isconnect = OFFLINE;
 
-	object_container_addend(&io->parent, &this->io_container);	///<填充到线程的IO容器里面
+	server->buffer = NULL;	///<监听socket不需要buffer
+	server->event = poller_event_create(server);
+
+    server->io_pool = new_io_pool(object_name(&server->parent), client_max, mode_tcp_server_client);
+    assert(server->io_pool);
+
+    server->io_pool->_init(&server->io_pool->parent);
+
+	object_container_addend(&server->parent, &this->io_container);	///<填充到线程的IO容器里面
 
 	return 0;
 }
@@ -113,16 +130,16 @@ static int tcp_server_recv(object_t parent)
 	char ip[16], settings[32];
 	struct sockaddr_in addr;
 	socklen_t size;
-	object_io_t io, client;
+	object_io_t server, client;
 	object_thread_t this;
 	
-	io = (object_io_t)parent;
-	this = (object_thread_t)io->hmod;
+	server = (object_io_t)parent;
+	this = (object_thread_t)server->hmod;
 
 	memset(&addr, 0, sizeof(struct sockaddr_in));
 	size = sizeof(struct sockaddr_in);
 
-	sd = accept(io->fd, (struct sockaddr *)&addr, &size);
+	sd = accept(server->fd, (struct sockaddr *)&addr, &size);
 	if(sd < 0)
 		return -2;
 	
@@ -133,19 +150,34 @@ static int tcp_server_recv(object_t parent)
 	memset(settings, 0, sizeof(settings));
 	snprintf(settings, 31, "%s:%d", ip, port);
 
-	debug(DEBUG, "==> new client: '%s'\n", settings);
-
 	///<创建一个对等端
+    /*
 	client = new_object_io_tcp_server_client(settings);
 	client->_setfd(&client->parent, sd);
-	client->_init(&client->parent, io->hmod, settings); ///<与监听描述符同一个线程
+	client->_init(&client->parent, server->hmod, settings); ///<与监听描述符同一个线程
+    */
 
-    client->server = io;
+    client = (object_io_t)server->io_pool->_get_one(&server->io_pool->parent);
+    if (!client)
+    {
+        debug(ERROR, "==> <%s> io pool use up!\n", object_name(&server->io_pool->parent));
+        close(sd);
 
+        return 0;
+    }
+
+	client->_setfd(&client->parent, sd);
+	client->_init(&client->parent, server->hmod, settings);
+
+	debug(DEBUG, "==> new client: '%s' connected\n", settings);
+
+    client->server = server;
+
+    ///<added to poller
 	poller_event_setfd(client->event, sd);
 	poller_add((long)this->poller,  client->event);
 
-	send_message(io->hmod, MSG_AIOCONN, 0, (LPARAM)client);
+	send_message(server->hmod, MSG_AIOCONN, 0, (LPARAM)client);
 
 	return 0; 
 }
