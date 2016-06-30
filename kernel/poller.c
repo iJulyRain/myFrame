@@ -1,4 +1,6 @@
 #include "poller.h"
+#include "print.h"
+#include <assert.h>
 
 ULONG poller_create(int maxfds)
 {
@@ -113,6 +115,8 @@ int poller_del(long pfd, poller_event_t event)
         poller->ev_list[i].fd.fd = -1;
 		poller->ev_list[i].ptr = (void *)-1;
 
+        debug(DEBUG, "==> poller delete <==\n");
+
         break;
     }
 
@@ -172,8 +176,7 @@ poller_event_t poller_event_create(void *ptr)
 	poller_event_t event;
 
 	event = (poller_event_t)calloc(1, sizeof(struct poller_event));
-	if(event == NULL)
-		return event;
+    assert(event);
 
 	event->magic = (long)event;
 	event->fd.fd = -1;

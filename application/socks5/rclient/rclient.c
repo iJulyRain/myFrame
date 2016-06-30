@@ -22,7 +22,7 @@
 
 #define NAME "R CLIENT"
 
-static object_io_pool_t io_pool;
+static object_io_pool_t io_pool; ///<connect to target 
 
 /**
 * @brief loop process 
@@ -59,7 +59,6 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
                 cb = (struct control_block *)calloc(1, sizeof(struct control_block));
                 assert(cb);
                 cb->io_bind = NULL;
-
                 client->user_ptr = cb;
 			}
 
@@ -111,7 +110,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
             client = (object_io_t)lparam;
             cb = (struct control_block *)client->user_ptr;
 
-            debug(DEBUG, "==> <%s> connected\n", object_name(&client->parent));
+            debug(DEBUG, "==> <%s> connected status %d\n", object_name(&client->parent), client->_state(&client->parent));
 
             if (strstr(object_name(&client->parent), "rserver client")) ///<connect to rserver
                 break;
@@ -173,12 +172,14 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
                         case SOCK_BREAK: //< close
                         {
                             cb = (struct control_block *)client->user_ptr;
-                            if (cb == NULL)
-                                break;
-
                             io_bind = cb->io_bind; 
                             if (io_bind != NULL)
                                 io_bind->_close(&io_bind->parent);
+                        }
+                            break;
+                        case SOCK_HEART:
+                        {
+                            debug(DEBUG, "==> HEART BEAT\n");
                         }
                             break;
                         case SOCK_CONNECT: //< connect
@@ -201,21 +202,25 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
                             debug(DEBUG, "==> new client <---> %s\n", settings);
 
-                            ///<创建连接
+                            ///<connect to target
                             io_bind = (object_io_t)io_pool->_get_one(&io_pool->parent);
                             assert(io_bind);
 
-                            if (io_bind->user_ptr == NULL)
+                            cb = (struct control_block *)io_bind->user_ptr;
+                            if (cb == NULL)
                             {
                                 cb = (struct control_block *)calloc(1, sizeof(struct control_block));
                                 assert(cb);
-                                cb->io_bind = client;
-                                io_bind->user_ptr = cb;
                             }
+
+                            cb->io_bind = client;
+                            io_bind->user_ptr = cb;
 
                             cb = (struct control_block *)client->user_ptr;
                             assert(cb);
                             cb->io_bind = io_bind;
+
+                            debug(DEBUG, "==> bind %s <---> %s\n", object_name(&client->parent), object_name(&io_bind->parent));
 
                             io_bind->_info();
                             io_bind->_init(&io_bind->parent, hmod, settings);
@@ -230,9 +235,6 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
             ///<transfer
             cb = (struct control_block *)client->user_ptr;
-            if (cb == NULL)
-                break;
-
             io_bind = cb->io_bind; 
             if(io_bind == NULL)
                 break;
@@ -247,13 +249,11 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			object_io_t client, io_bind;
             struct control_block *cb; 
 
-            debug(DEBUG, "MSG_AIOBREAK\n");
-
             client = (object_io_t)lparam;
-            cb = (struct control_block *)client->user_ptr;
-            if (cb == NULL)
-                break;
 
+            debug(DEBUG, "MSG_AIOBREAK <%s>\n", object_name(&client->parent));
+
+            cb = (struct control_block *)client->user_ptr;
             io_bind = cb->io_bind;
             if (io_bind == NULL)
                 break;

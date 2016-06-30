@@ -81,7 +81,7 @@ int post_message(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
 	if((p->msgqueue.write_pos + 1) % 16 == p->msgqueue.read_pos)	//已经写满了
 	{
-        fprintf(stderr, "####### message queue full ########\n");
+        debug(ERROR, "####### message queue full ########\n");
 		rtn = -1;
 		goto err;
 	}

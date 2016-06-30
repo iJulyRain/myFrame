@@ -36,5 +36,13 @@
 	char data[32];
  };
 
+struct control_block
+{
+	int state;
+    int used;
+
+	object_io_t io_bind;
+};
+
  #endif
 

@@ -23,11 +23,6 @@
 #define GET_IO 0x01
 #define RST_IO 0x02
 
-struct control_block
-{
-	object_io_t io_bind;
-};
-
 struct global_conf
 {
 	char *server;	///<ip:port

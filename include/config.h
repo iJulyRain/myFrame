@@ -25,7 +25,7 @@
 #define POLLER_MAX		512	
 
 #define BUFFER_SIZE		1024 * 8 
-#define BUFFER_MAX		1024 * 128 
+#define BUFFER_MAX		1024 * 1024 
 
 #define IO_POOL_MAX     128 
 

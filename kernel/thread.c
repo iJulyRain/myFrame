@@ -85,7 +85,8 @@ int thread_default_process(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 			object_io_t client = (object_io_t)lparam;
 			object_thread_t ot = (object_thread_t)hmod;
 
-			poller_del((long)ot->poller, client->event);
+            if (client->event)
+			    poller_del((long)ot->poller, client->event);
 
 			if (io_state(&client->parent) == ONLINE)
             {

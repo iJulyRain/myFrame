@@ -71,7 +71,6 @@ static object_t io_pool_get_one(object_t parent)
 
     io_pool = (object_io_pool_t)parent;
 
-
     CONTAINER_FOREACH(&io_pool->container, object_io_t, io)
         if(io_state(&io->parent) == UNUSED)
             break;

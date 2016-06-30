@@ -27,16 +27,6 @@ enum socks_state
 	socks_state_stream
 };
 
-struct control_block
-{
-	int state;
-
-	object_io_t io_bind;
-};
-
-#define GET_IO	0x01
-#define RST_IO	0x02
-
 struct global_conf
 {
 	int listen_port;

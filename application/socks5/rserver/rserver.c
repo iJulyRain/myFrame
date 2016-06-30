@@ -42,8 +42,8 @@ static object_io_t get_one_client(object_io_t server)
             continue;
 
         if(!strcmp(object_name(&io->server->parent), object_name(&server->parent))
-        && io_state(&io->parent) == ONLINE
-        && cb->io_bind == NULL)
+        && io->_state(&io->parent) == ONLINE
+        && cb->used == FALSE)
             break;
 
         io = NULL;
@@ -119,25 +119,36 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
                     client->_close(&client->parent);
                     break;
                 }
-
-                cb = (struct control_block *)calloc(1, sizeof(struct control_block));
-                assert(cb);
+                
+                cb = (struct control_block *)client->user_ptr;
+                if (cb == NULL)
+                {
+                    cb = (struct control_block *)calloc(1, sizeof(struct control_block));
+                    assert(cb);
+                }
 
                 cb->io_bind = io_bind;
                 cb->state = socks_state_version;
+                cb->used = TRUE;
                 client->user_ptr = cb; 
 
                 //////////////////////////////////////////////////////
                 cb = (struct control_block *)io_bind->user_ptr;
                 cb->state = socks_state_version;
+                cb->used = TRUE;
                 cb->io_bind = client;
             }
             else if (!strcmp(object_name(&server->parent), "server client")) ///< from client 
             {
-                cb = (struct control_block *)calloc(1, sizeof(struct control_block));
-                assert(cb);
+                cb = (struct control_block *)client->user_ptr;
+                if (cb == NULL)
+                {
+                    cb = (struct control_block *)calloc(1, sizeof(struct control_block));
+                    assert(cb);
+                }
 
                 cb->io_bind = NULL;
+                cb->used = FALSE;
                 client->user_ptr = cb;
             }
 		}
@@ -159,11 +170,13 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 				struct control_block *cb;
 
 				cb = (struct control_block *)client->user_ptr;
+                /*
 				if (cb->io_bind == NULL)
                 {
                     client->_close(&client->parent);
 					break;
                 }
+                */
 
 				switch (cb->state)
 				{
@@ -210,7 +223,9 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 						client->_output(&client->parent, buffer, 2);	//ver response
 
 						cb->state = socks_state_connect;
-                        ((struct control_block *)cb->io_bind->user_ptr)->state = socks_state_connect;
+
+                        if (cb->io_bind)
+                            ((struct control_block *)cb->io_bind->user_ptr)->state = socks_state_connect;
 					}
 						break;
 
@@ -285,8 +300,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
 						memcpy(buffer, &s_header, sizeof(struct s_header));
 
-						///<transfer
-						if (cb->io_bind != NULL)
+						if (cb->io_bind)
 							cb->io_bind->_output(&cb->io_bind->parent, buffer, sizeof(struct s_header));
 					}
 						break;
@@ -294,7 +308,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 					case socks_state_stream:
 					{
 						rxnum = client->_input(&client->parent, buffer, BUFFER_SIZE, TRUE);
-						if (cb->io_bind != NULL)
+						if (cb->io_bind)
 						    cb->io_bind->_output(&cb->io_bind->parent, buffer, rxnum);
 					}
 						break;
@@ -319,6 +333,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
                     if ((s_header.command & 0xFF) == SOCK_HEART)
                     {
                         debug(DEBUG, "==> HEART BEART!\n");
+                        client->_output(&client->parent, buffer, rxnum);
                         break;
                     }
                 }
@@ -363,12 +378,9 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 						buffer[8] = 0x00; //匿名端口
 						buffer[9] = 0x00;
 
-                        if (cb->io_bind)
-                        {
-                            cb->io_bind->_output(&cb->io_bind->parent, buffer, 10);
-                            ((struct control_block *)cb->io_bind->user_ptr)->state = socks_state_stream;
-                        }
+                        cb->io_bind->_output(&cb->io_bind->parent, buffer, 10);
 
+                        ((struct control_block *)cb->io_bind->user_ptr)->state = socks_state_stream;
                         cb->state = socks_state_stream;
 					}
 						break;
@@ -399,8 +411,8 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 		case MSG_AIOERR:
 		case MSG_AIOBREAK:
 		{
-			struct control_block *cb;
 			object_io_t client, server, io_bind;
+			struct control_block *cb;
 
             client = (object_io_t)lparam; 
             server = client->server;
@@ -410,11 +422,6 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
                 break;
 
             io_bind = cb->io_bind;
-            cb->io_bind = NULL;
-
-            cb = (struct control_block *)io_bind->user_ptr;
-            if (cb != NULL)
-                cb->io_bind = NULL;
 
             if (!strcmp(object_name(&server->parent), "server proxy")) ///< from proxychain 
             {
@@ -437,21 +444,18 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
                 ///<close proxychain connect
                 io_bind->_close(&io_bind->parent);
             }
+
+            cb->io_bind = NULL;
+            cb->used = FALSE;
+
+            cb = (struct control_block *)io_bind->user_ptr;
+            if (cb != NULL)
+            {
+                cb->io_bind = NULL;
+                cb->used = FALSE;
+            }
 		}
 			break;
-
-        case MSG_AIOCLR:
-        {
-            object_io_t client;
-
-            client = (object_io_t)lparam; 
-            if (client->user_ptr)
-            {
-                free(client->user_ptr);
-                client->user_ptr = NULL;
-            }
-        }
-            break;
 	}
 
 	return thread_default_process(hmod, message, wparam, lparam);
