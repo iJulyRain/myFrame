@@ -84,9 +84,8 @@ void do_loop(long pfd, int timeout)
 
         if(io->_state(&io->parent) != ONLINE)
         {
-            if (!io->closed)
-			    send_message(io->hmod, MSG_AIOBREAK, 0, (LPARAM)io);	///<关闭
-
+            //if (!io->closed)
+			send_message(io->hmod, MSG_AIOBREAK, 0, (LPARAM)io);	///<关闭
             if(io->remove)
 			    send_message(io->hmod, MSG_AIOCLR, 0, (LPARAM)io);	///<清除
         }

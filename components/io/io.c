@@ -49,7 +49,7 @@ object_io_t new_object_io(const char *io_type, const char *alias, int attr)
     if (io->attr & IO_ATTR_REMOVE)
         io->remove = TRUE;
 
-    io->closed = FALSE;
+    //io->closed = FALSE;
 
 	INIT_LOCK(&io->lock);
 
@@ -62,7 +62,7 @@ void free_object_io(object_io_t io)
         return;
 
     io->isconnect = UNUSED;
-    io->closed = FALSE;
+    //io->closed = FALSE;
 
     if(io->settings)
     {

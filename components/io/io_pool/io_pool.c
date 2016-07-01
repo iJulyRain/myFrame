@@ -24,7 +24,7 @@
 
 static void io_pool_info(void)
 {
-	debug(RELEASE, "==> io_pool writen by li zhixian @2016.06.28 <==\n");
+//	debug(RELEASE, "==> io_pool writen by li zhixian @2016.06.28 <==\n");
 }
 
 static int io_pool_init(object_t parent)

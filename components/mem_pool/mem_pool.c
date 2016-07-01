@@ -4,7 +4,7 @@
 
 static void mem_pool_info(void)
 {
-	debug(RELEASE, "==> mem pool writen by li zhixian @2015.08.19 ^.^ <==\n");
+//	debug(RELEASE, "==> mem pool writen by li zhixian @2015.08.19 ^.^ <==\n");
 }
 
 static int mem_pool_init(object_t parent, int max_index, int max_free_index, int boundary)

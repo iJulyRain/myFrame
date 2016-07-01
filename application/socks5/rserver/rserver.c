@@ -302,6 +302,14 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
 						if (cb->io_bind)
 							cb->io_bind->_output(&cb->io_bind->parent, buffer, sizeof(struct s_header));
+
+                        /*
+                        struct sockaddr_in saddr;
+
+                        memset(&saddr, 0, sizeof(struct sockaddr_in));
+                        memcpy(&saddr.sin_addr.s_addr, ip, 4);
+                        debug(RELEASE, "connect <%s>\t<======>\t<%s:%d>\n", client->settings, inet_ntoa(saddr.sin_addr), port[0] << 8 | port[1]);
+                        */
 					}
 						break;
 
@@ -309,7 +317,10 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 					{
 						rxnum = client->_input(&client->parent, buffer, BUFFER_SIZE, TRUE);
 						if (cb->io_bind)
+                        {
+                            debug(RELEASE, "[trans]   <%s>\t<======>\t<%s> %d Bytes\n", client->settings, cb->io_bind->settings, rxnum);
 						    cb->io_bind->_output(&cb->io_bind->parent, buffer, rxnum);
+                        }
 					}
 						break;
 				}
@@ -358,7 +369,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 							buffer[2] = 0x00;
 							buffer[3] = 0x01;
 
-							debug(DEBUG, "===> connect ok!\n");
+                            debug(RELEASE, "[connect] <%s>\t<======>\t<%s> ok (%s)\n", cb->io_bind->settings, s_header.data + 1, client->settings);
 						}
 						else
 						{
@@ -367,7 +378,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 							buffer[2] = 0x00;
 							buffer[3] = 0x01;
 
-							debug(DEBUG, "===> connect bad!\n");
+                            debug(RELEASE, "[connect] <%s>\t<======>\t<%s> bad (%s)\n", cb->io_bind->settings, s_header.data + 1, client->settings);
 						}
 
 						buffer[4] = 0x00; //匿名IP
@@ -400,7 +411,10 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 						else
 						{
                             if (cb->io_bind)
+                            {
+                                debug(RELEASE, "[trans]   <%s>\t<======>\t<%s> %d Bytes\n", client->settings, cb->io_bind->settings, rxnum);
 							    cb->io_bind->_output(&cb->io_bind->parent, buffer, rxnum);
+                            }
 						}
 					}
 						break;

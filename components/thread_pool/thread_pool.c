@@ -107,7 +107,7 @@ static int thread_pool_worker_proc(HMOD hmod, int message, WPARAM wparam, LPARAM
 
 void thread_pool_info(void)
 {
-	debug(RELEASE, "==> thread pool writen by li zhixian @2015.08.15 ^.^ <==\n");
+//	debug(RELEASE, "==> thread pool writen by li zhixian @2015.08.15 ^.^ <==\n");
 }
 
 int thread_pool_init(object_t parent, int worker_num, HMOD hmod)

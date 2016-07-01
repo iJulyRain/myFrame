@@ -77,6 +77,7 @@ void object_insert_after(object_t n, object_t l, struct object_information *cont
 void object_set_name(object_t object, const char *name);
 const char *object_name(object_t object);
 int object_type(object_t object);
+int object_isempty(object_t object);
 
 #define CONTAINER_FOREACH(container, T, pt)	\
 	list_t *node;\

@@ -54,7 +54,7 @@ typedef struct object_io
 
     int attr;
     int remove; ///<remove from container
-    int closed; ///<closed by MSG_AIBREAK|MSG_AIOERR
+    //int closed; ///<closed by MSG_AIBREAK|MSG_AIOERR
 
     struct object_io *server; ///< only apply to tcp_server_client mode
     object_io_pool_t io_pool;

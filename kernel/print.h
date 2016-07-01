@@ -31,7 +31,7 @@
 */
 int log_init(void);
 
-void debug(int level, const char *format, ...);
+//void debug(int level, const char *format, ...);
 
 #define debug(level, format, arg...)	\
 	{	\

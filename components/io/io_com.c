@@ -35,7 +35,7 @@ struct com
 
 static void com_info(void)
 {
-	debug(RELEASE, "==> AIO(com) writen by li zhixian @2015.06.01 ^.^ <==\n");
+//	debug(RELEASE, "==> AIO(com) writen by li zhixian @2015.06.01 ^.^ <==\n");
 }
 
 static int speed_arr[] = {B115200, B38400, B19200, B9600, B4800, B2400, B1200, B300};

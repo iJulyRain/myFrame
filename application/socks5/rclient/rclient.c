@@ -127,16 +127,21 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
             {
                 debug(DEBUG, " %s <==> %s success\n", object_name(&io_bind->parent), object_name(&client->parent));
                 s_header.data[0] = 0;
+
+                debug(RELEASE, "[connect] <%s>\t<======>\t<%s> ok\n", io_bind->settings, client->settings);
             }
             else
             {
                 debug(DEBUG, " %s <==> %s failed\n", object_name(&io_bind->parent), object_name(&client->parent));
                 s_header.data[0] = 1;
 
+                debug(RELEASE, "[connect] <%s>\t<======>\t<%s> bad\n", io_bind->settings, client->settings);
+
                 ///<未加入到poller，手动删除
                 post_message(hmod, MSG_AIOBREAK, 0, (LPARAM)client);
                 post_message(hmod, MSG_AIOCLR, 0, (LPARAM)client);
             }
+            strcpy(s_header.data + 1, client->settings);
 
             memset(response, 0, sizeof(response));
             memcpy(response, &s_header, sizeof(struct s_header));
@@ -240,6 +245,7 @@ static int thread_proc(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
                 break;
 
             io_bind->_output(&io_bind->parent, buffer, rxnum);
+            debug(RELEASE, "[trans]   <%s>\t<======>\t<%s> %d Bytes\n", client->settings, io_bind->settings, rxnum);
 		}
 			break;
 

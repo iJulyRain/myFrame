@@ -79,7 +79,7 @@ int post_message(HMOD hmod, int message, WPARAM wparam, LPARAM lparam)
 
 	ENTER_LOCK(&p->msgqueue.lock);
 
-	if((p->msgqueue.write_pos + 1) % 16 == p->msgqueue.read_pos)	//已经写满了
+	if((p->msgqueue.write_pos + 1) % MSGQUEUE_MAX == p->msgqueue.read_pos)	//已经写满了
 	{
         debug(ERROR, "####### message queue full ########\n");
 		rtn = -1;

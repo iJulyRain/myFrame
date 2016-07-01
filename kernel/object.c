@@ -221,3 +221,8 @@ int object_type(object_t object)
 {
 	return object->type;
 }
+
+int object_isempty(object_t object)
+{
+	return list_isempty(&object->list);
+}

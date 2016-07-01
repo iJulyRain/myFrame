@@ -20,7 +20,7 @@
 
 #define OBJ_NAME_MAX    64	
 
-#define MSGQUEUE_MAX	16
+#define MSGQUEUE_MAX	64
 
 #define POLLER_MAX		512	
 
